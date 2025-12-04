@@ -1,15 +1,20 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/plugin"
 	"github.com/mattermost/mattermost/server/public/pluginapi"
 
 	"github.com/mattermost/mattermost/server/plugins/ai-suite/server/openai"
 	"github.com/mattermost/mattermost/server/plugins/ai-suite/server/store"
+	"github.com/mattermost/mattermost/server/plugins/ai-suite/server/summarizer"
 )
 
 // Plugin implements the Mattermost plugin interface.
@@ -23,6 +28,7 @@ type Plugin struct {
 	router       *APIRouter
 	openAIClient *openai.Client
 	store        *store.Service
+	summarizer   *summarizer.Service
 }
 
 // OnActivate is invoked when the plugin is activated on a Mattermost server.
@@ -32,6 +38,10 @@ func (p *Plugin) OnActivate() error {
 
 	if err := p.OnConfigurationChange(); err != nil {
 		return err
+	}
+
+	if err := p.registerCommands(); err != nil {
+		p.apiClient.Log.Warn("failed to register slash command", "error", err.Error())
 	}
 
 	p.apiClient.Log.Info("AI Productivity Suite plugin activated", "version", PluginVersion)
@@ -47,6 +57,7 @@ func (p *Plugin) OnDeactivate() error {
 	p.openAIClient = nil
 	p.store = nil
 	p.router = nil
+	p.summarizer = nil
 
 	return nil
 }
@@ -69,6 +80,7 @@ func (p *Plugin) OnConfigurationChange() error {
 
 	if cfg.OpenAIAPIKey == "" {
 		p.openAIClient = nil
+		p.summarizer = nil
 		p.apiClient.Log.Warn("OpenAI API key not configured; AI functionality disabled")
 		return nil
 	}
@@ -86,6 +98,19 @@ func (p *Plugin) OnConfigurationChange() error {
 	}
 
 	p.openAIClient = client
+	p.summarizer = summarizer.NewService(
+		p.apiClient,
+		p.store,
+		p.openAIClient,
+		func() summarizer.Config {
+			conf := p.getConfiguration()
+			return summarizer.Config{
+				EnableSummarization: conf.EnableSummarization,
+				MaxSummaryMessages:  conf.MaxSummaryMessages,
+			}
+		},
+	)
+
 	return nil
 }
 
@@ -118,4 +143,86 @@ func (p *Plugin) setConfiguration(cfg *configuration) {
 
 func main() {
 	plugin.ClientMain(&Plugin{})
+}
+
+func (p *Plugin) registerCommands() error {
+	if p.API == nil {
+		return fmt.Errorf("plugin api unavailable")
+	}
+
+	cmd := &model.Command{
+		Trigger:          summarizer.CommandTrigger,
+		DisplayName:      "AI Summarize",
+		Description:      "Generate AI-powered conversation summaries",
+		AutoComplete:     true,
+		AutoCompleteDesc: "Summarize the current thread or channel",
+		AutoCompleteHint: "[thread|channel] [time-range]",
+	}
+
+	return p.API.RegisterCommand(cmd)
+}
+
+// ExecuteCommand handles /summarize.
+func (p *Plugin) ExecuteCommand(_ *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
+	if args == nil || strings.TrimSpace(args.Command) == "" {
+		return nil, model.NewAppError("ExecuteCommand", "app.command.execute.no_command.app_error", nil, "", http.StatusBadRequest)
+	}
+
+	if p.summarizer == nil {
+		return &model.CommandResponse{
+			ResponseType: model.CommandResponseTypeEphemeral,
+			Text:         "Summarization is not configured yet. Please ask a system admin to add the OpenAI API key.",
+		}, nil
+	}
+
+	opts, err := summarizer.ParseCommand(args.Command)
+	if err != nil {
+		return &model.CommandResponse{
+			ResponseType: model.CommandResponseTypeEphemeral,
+			Text:         err.Error(),
+		}, nil
+	}
+
+	req := summarizer.Request{
+		Type:       opts.Target,
+		UserID:     args.UserId,
+		ChannelID:  args.ChannelId,
+		RootPostID: args.RootId,
+		TimeRange:  opts.Argument,
+	}
+
+	if req.Type == summarizer.TypeThread && req.RootPostID == "" {
+		return &model.CommandResponse{
+			ResponseType: model.CommandResponseTypeEphemeral,
+			Text:         "Run `/summarize thread` from inside the thread you want summarized.",
+		}, nil
+	}
+
+	if req.Type == summarizer.TypeChannel && req.ChannelID == "" {
+		return &model.CommandResponse{
+			ResponseType: model.CommandResponseTypeEphemeral,
+			Text:         "Unable to determine the target channel.",
+		}, nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	result, err := p.summarizer.Summarize(ctx, req)
+	if err != nil {
+		return &model.CommandResponse{
+			ResponseType: model.CommandResponseTypeEphemeral,
+			Text:         fmt.Sprintf("Unable to generate summary: %v", err),
+		}, nil
+	}
+
+	builder := strings.Builder{}
+	builder.WriteString(fmt.Sprintf("📋 **Summary** (%d messages, %d participants)\n\n", result.MessageCount, result.ParticipantCount))
+	builder.WriteString(result.Summary)
+
+	return &model.CommandResponse{
+		ResponseType:     model.CommandResponseTypeEphemeral,
+		Text:             builder.String(),
+		SkipSlackParsing: true,
+	}, nil
 }

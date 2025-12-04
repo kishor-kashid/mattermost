@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
+	"github.com/mattermost/mattermost/server/plugins/ai-suite/server/summarizer"
 )
 
 const (
@@ -40,6 +42,11 @@ func (r *APIRouter) registerRoutes() {
 	api.Use(r.requireUser)
 
 	api.HandleFunc("/me", r.handleMe).Methods(http.MethodGet)
+
+	summaryHandler := summarizer.NewHTTPHandler(func() *summarizer.Service {
+		return r.plugin.summarizer
+	})
+	api.HandleFunc("/summarize", summaryHandler.HandleSummarize).Methods(http.MethodPost)
 }
 
 func (r *APIRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {

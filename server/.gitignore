@@ -24,6 +24,7 @@ config/logging.json
 !/plugins/
 !/plugins/ai-suite/
 !/plugins/ai-suite/**
+plugins/com.mattermost.ai-suite/
 
 # go.work file
 go.work
@@ -38,6 +39,7 @@ go.work.sum
 .npminstall
 .yarninstall
 /prepackaged_plugins
+build/start-dependencies.yml
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o

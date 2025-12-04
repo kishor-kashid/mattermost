@@ -1,24 +1,56 @@
 import manifest from './manifest';
+import SummaryPanel from './components/summarizer/SummaryPanel';
+import {SummaryBridge} from './summarizer/bridge';
 import type {ClientPlugin, PluginRegistry} from './types';
 
 class AIProductivitySuitePlugin implements ClientPlugin {
+    private bridge = new SummaryBridge();
+    private showRHS?: () => void;
+    private hideRHS?: () => void;
+
     public initialize(registry: PluginRegistry) {
-        // Placeholder registrations. Future PRs will hook real UI integrations.
-        if (registry.registerChannelHeaderButtonAction) {
-            registry.registerChannelHeaderButtonAction(
-                () => alert('AI Productivity Suite placeholder'),
-                'AI Suite',
-                'AI actions',
+        if (registry.registerRightHandSidebarComponent) {
+            const rhs = registry.registerRightHandSidebarComponent(
+                () => (
+                    <SummaryPanel
+                        bridge={this.bridge}
+                        onClose={() => this.hideRHS?.()}
+                    />
+                ),
+                'AI Summaries',
             );
+            this.showRHS = rhs.showRHSPlugin;
+            this.hideRHS = rhs.hideRHSPlugin;
         }
 
-        // eslint-disable-next-line no-console
-        console.log('AI Productivity Suite webapp initialized', manifest.version);
+        registry.registerPostDropdownMenuAction?.(
+            'Summarize Thread',
+            (postId: string) => {
+                this.bridge.setTarget({
+                    type: 'thread',
+                    postId,
+                });
+                this.showRHS?.();
+            },
+            () => true,
+        );
+
+        registry.registerChannelHeaderMenuAction?.(
+            'Summarize Channel',
+            (channelId: string) => {
+                this.bridge.setTarget({
+                    type: 'channel',
+                    channelId,
+                    timeRange: '24h',
+                });
+                this.showRHS?.();
+            },
+        );
     }
 
     public uninitialize() {
-        // eslint-disable-next-line no-console
-        console.log('AI Productivity Suite webapp unmounted');
+        this.bridge.setTarget(null);
+        this.hideRHS?.();
     }
 }
 

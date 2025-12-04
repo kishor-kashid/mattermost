@@ -1,3 +1,5 @@
+import type {ComponentType, ReactNode} from 'react';
+
 export type PluginManifest = {
     id: string;
     name: string;
@@ -6,10 +8,18 @@ export type PluginManifest = {
     min_server_version: string;
 };
 
+export type RHSRegistration = {
+    id: string;
+    showRHSPlugin: () => void;
+    hideRHSPlugin: () => void;
+    toggleRHSPlugin: () => void;
+};
+
 export type PluginRegistry = {
     registerChannelHeaderButtonAction?: (...args: any[]) => void;
-    registerPostDropdownMenuAction?: (...args: any[]) => void;
-    registerRightHandSidebarComponent?: (...args: any[]) => void;
+    registerChannelHeaderMenuAction?: (text: ReactNode, action: (channelId: string) => void) => string;
+    registerPostDropdownMenuAction?: (text: ReactNode, action: (postId: string) => void, filter: (postId: string) => boolean) => string;
+    registerRightHandSidebarComponent?: (component: ComponentType, title: ReactNode) => RHSRegistration;
 };
 
 export interface ClientPlugin {

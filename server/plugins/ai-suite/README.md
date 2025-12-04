@@ -59,3 +59,19 @@ Run all commands from `server/plugins/ai-suite`.
 
 See `docs/SETUP.md` for deeper instructions, troubleshooting tips, and verification steps.
 
+## AI Message Summarization (PR #3)
+
+PR #3 delivers the full end-to-end summarizer feature set:
+
+- **Thread summaries** via `/summarize thread` or the new post dropdown action “Summarize Thread”. Results appear in a dedicated RHS panel with copy/share/regenerate controls.
+- **Channel summaries** via `/summarize channel 24h|3d|7d|custom` or the channel header action “Summarize Channel”, including quick range chips and a custom date/time modal.
+- **Backend services** including `server/summarizer` (message fetching, OpenAI prompt/response handling, 24h KV cache) and a `POST /plugins/com.mattermost.ai-suite/api/v1/summarize` endpoint.
+- **Webapp UI** that registers a right-hand sidebar, post dropdown item, and channel header menu integration, plus React hooks for fetching/caching summaries.
+
+### Verifying locally
+
+1. `GOWORK=off make bundle && GOWORK=off make deploy` from `server/plugins/ai-suite`.
+2. Set `MM_SERVER_PATH` to your `server/` directory before running `make deploy`.
+3. Reload the plugin in **System Console → Plugins → Management** after deployment, then hard-refresh the browser.
+4. Run `/summarize thread` inside a thread, or use the new UI actions, and confirm the RHS panel renders summaries with metadata and actions.
+

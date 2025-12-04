@@ -1,9 +1,9 @@
 # Active Context
 
 ## Current Work Focus
-**Plugin implementation of the Mattermost AI Productivity Suite (PR #2 complete, PR #3 next)**
+**Plugin implementation of the Mattermost AI Productivity Suite (PR #3 complete, PR #4 next)**
 
-We now have the shared OpenAI, storage, and API foundations in place; next up is delivering the feature layers (summaries, action items, analytics, formatter).
+Summaries are now live end-to-end (backend services, caching, slash command, RHS UI). Next we’ll focus on the remaining feature layers (action items, analytics, formatter).
 
 ## Recent Changes
 - ✅ Created Memory Bank documentation structure
@@ -21,6 +21,7 @@ We now have the shared OpenAI, storage, and API foundations in place; next up is
 - ✅ **Synced**: PRD updated to remove legacy scheduled-messages scope and document action items + formatter flows
 - ✅ **Completed PR #1**: Added plugin manifest, Go module (with `server/public` replace), Makefile, README/SETUP docs, server entrypoint/config, and placeholder webapp bundle
 - ✅ **Completed PR #2**: Built OpenAI GPT-4 client wrapper + prompt templates, KV store abstraction, REST API/router middleware, plugin configuration settings, and base webapp API client/common UI components
+- ✅ **Completed PR #3**: Implemented summarizer service + cache, `/summarize` command/endpoint, thread/channel retrieval, RHS React components/hooks, and deployment guidance (GOWORK=off + `npm install --legacy-peer-deps`)
 - ✅ **Build Guidance**: Documented that `GOWORK=off` is required when running `go build`/`make bundle` inside the plugin and noted npm’s `--legacy-peer-deps` workaround for TypeScript peer conflicts
 
 ## Next Steps
@@ -30,8 +31,9 @@ We now have the shared OpenAI, storage, and API foundations in place; next up is
 4. ✅ Finalize plugin feature specifications
 5. ✅ **PR #1 Complete**: Project initialization and plugin scaffold
 6. ✅ **PR #2 Complete**: OpenAI integration and core services
-7. ⏳ **Begin PR #3**: Summarization feature implementation
-8. ⏳ Continue through remaining PRs
+7. ✅ **PR #3 Complete**: Summarization feature implementation
+8. ⏳ **Begin PR #4**: Action Item Extractor
+9. ⏳ Continue through remaining PRs
 
 ## Active Decisions and Considerations
 
@@ -79,7 +81,7 @@ We now have the shared OpenAI, storage, and API foundations in place; next up is
 - ✅ API specifications defined
 - ✅ Plugin scaffold builds (`make bundle`) when run with `GOWORK=off` and npm legacy peer deps
 - ✅ GPT-4 OpenAI client, KV store service, REST API router, and base webapp infrastructure implemented (PR #2)
-- ⏳ Ready to implement summarization feature (PR #3)
+- ✅ Summarization backend + RHS UI shipped (PR #3)
 
 ## Plugin Architecture Decisions
 - **Backend Services**: Summarizer, Analytics, ActionItems, Formatter
@@ -95,6 +97,7 @@ We now have the shared OpenAI, storage, and API foundations in place; next up is
 4. **Performance**: Target <5 seconds for summarization, <1 second for analytics
 5. **Permissions**: All features respect Mattermost's channel membership permissions
 6. **Build Tooling**: When compiling from `server/plugins/ai-suite`, set `GOWORK=off` (workspace otherwise points to monorepo root). Webapp npm install currently requires `--legacy-peer-deps` due to `@mattermost/types` optional TypeScript 4.x peer.
+7. **Plugin Deployment**: `make deploy` installs into `server/plugins/com.mattermost.ai-suite`; ensure that folder contains `server/dist` + `webapp/dist` and remove stray duplicate plugin directories (Mattermost logs “multiple plugins found” if both `ai-suite` and `com.mattermost.ai-suite` exist).
 
 ## Development Workflow
 ```

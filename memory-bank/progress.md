@@ -29,7 +29,7 @@
 
 **4 Core Features:**
 
-1. **AI Message Summarization** ⏳
+1. **AI Message Summarization** ✅
    - Thread and channel summarization
    - Configurable message limits (default: 500)
    - 24-hour caching
@@ -59,7 +59,7 @@
 
 ## Current Development Phase
 **Phase**: Plugin Development – Execution
-**State**: PR #2 (OpenAI integration & core services) complete; preparing PR #3 (Summarization)
+**State**: PR #3 (Summarization) complete; preparing PR #4 (Action Items)
 
 ### Completed Planning Tasks
 - [x] Mattermost local environment running
@@ -86,9 +86,11 @@
 - [x] **PR #2: OpenAI Integration & Core Services**
   - Added GPT-4 OpenAI client, prompt templates, config-controlled API key/model settings, KV store abstraction, REST API router/middleware, base webapp API client + common UI components
   - Documented admin-only key configuration and ensured plugin tests run with `GOWORK=off go test ./...`
+- [x] **PR #3: AI Message Summarization**
+  - Implemented summarizer service + cache, `/summarize` slash command and REST endpoint, thread/channel retrieval, RHS React components with copy/share/regenerate controls, and deployment notes (GOWORK=off + `npm install --legacy-peer-deps`)
 
 ### Ready to Start
-- [ ] PR #3: AI Message Summarization (12 tasks)
+- [x] PR #3: AI Message Summarization (12 tasks)
 - [ ] PR #4: Action Item Extractor (14 tasks)
 - [ ] PR #5: Message Formatting Assistant (13 tasks)
 - [ ] PR #6: Channel Analytics Dashboard (16 tasks)
