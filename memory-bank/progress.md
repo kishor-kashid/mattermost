@@ -58,8 +58,8 @@
    - Multiple formatting profiles
 
 ## Current Development Phase
-**Phase**: Plugin Specification & Planning
-**State**: Ready to begin PR #1 (Project Initialization)
+**Phase**: Plugin Development – Execution
+**State**: PR #1 (Project Initialization & Scaffold) complete; preparing PR #2 (OpenAI integration)
 
 ### Completed Planning Tasks
 - [x] Mattermost local environment running
@@ -75,9 +75,16 @@
 - [x] Task list created (86 tasks)
 - [x] Message limit defaults configured
 - [x] Memory Bank updated
+- [x] Task list PR ordering aligned with scoped features (Action Items → Formatter → Analytics)
+- [x] PRD reflects final four-feature scope (scheduled messages removed, action items/formatter documented)
+
+### Completed Development Milestones
+- [x] **PR #1: Project Initialization & Plugin Scaffold**
+  - Created plugin manifest, Go module, Makefile, README/docs
+  - Implemented server entrypoint/configuration and webapp bootstrap
+  - Verified `make bundle` path with `GOWORK=off` + npm legacy peer deps workaround
 
 ### Ready to Start
-- [ ] PR #1: Project Initialization & Plugin Scaffold (9 tasks)
 - [ ] PR #2: OpenAI Integration & Core Services (8 tasks)
 - [ ] PR #3: AI Message Summarization (12 tasks)
 - [ ] PR #4: Action Item Extractor (14 tasks)
@@ -86,7 +93,7 @@
 - [ ] PR #7: Testing, Documentation & Polish (14 tasks)
 
 ## Known Issues
-None identified yet. This is a mature, production codebase.
+None identified yet. Build notes: set `GOWORK=off` when compiling the plugin module and run `npm install --legacy-peer-deps` inside `server/plugins/ai-suite/webapp` until TypeScript peer constraints are relaxed.
 
 ## Plugin Development Roadmap
 

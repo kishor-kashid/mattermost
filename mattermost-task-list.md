@@ -320,127 +320,218 @@ mattermost/
 
 ---
 
-## PR #4: Scheduled Messages Feature
+## PR #4: Action Item Extractor Feature
 
-**Branch:** `feature/scheduled-messages`  
-**Description:** Implement scheduled message functionality including scheduling service, background job runner, management UI, and slash commands.
+**Branch:** `feature/action-item-extractor`  
+**Description:** Build the AI-powered action item detection workflow, including backend services, reminders, slash commands, and the dashboards that surface personal and team commitments.
 
 ### Tasks
 
-- [ ] **4.1 Scheduler Service Core**
-  - [ ] Create scheduler service struct
-  - [ ] Implement scheduled message storage
-  - [ ] Add message retrieval methods
-  - [ ] Implement status updates (pending, sent, cancelled)
+- [ ] **4.1 Action Item Service Core**
+  - [ ] Create action item service struct and initialization wiring
+  - [ ] Define data models (status, priority, deadlines, assignee metadata)
+  - [ ] Implement create/list/update helpers that delegate to the KV store
   - **Files Created:**
-    - `server/plugins/ai-suite/server/scheduler/service.go`
-    - `server/plugins/ai-suite/server/scheduler/types.go`
+    - `server/plugins/ai-suite/server/actionitems/service.go`
+    - `server/plugins/ai-suite/server/actionitems/types.go`
 
-- [ ] **4.2 DateTime Parser**
-  - [ ] Implement relative time parsing ("in 2 hours", "tomorrow 9am")
-  - [ ] Implement absolute time parsing ("2024-12-15 14:00")
-  - [ ] Add timezone handling
-  - [ ] Handle parsing errors gracefully
+- [ ] **4.2 Detection Engine & Prompts**
+  - [ ] Implement detection heuristics for commitments, assignees, and deadlines
+  - [ ] Create OpenAI prompt templates focused on action item extraction
+  - [ ] Parse LLM responses into normalized action item structures
   - **Files Created:**
-    - `server/plugins/ai-suite/server/scheduler/parser.go`
+    - `server/plugins/ai-suite/server/actionitems/detector.go`
+    - `server/plugins/ai-suite/server/actionitems/prompts.go`
 
-- [ ] **4.3 Background Job Runner**
-  - [ ] Implement job scheduler using cron
-  - [ ] Create polling mechanism (30-second interval)
-  - [ ] Fetch due messages from store
-  - [ ] Post messages via Mattermost API
-  - [ ] Update message status after sending
-  - [ ] Handle failures with retry logic
+- [ ] **4.3 Action Item Store Helpers**
+  - [ ] Create repository helpers for namespaced keys and secondary indexes
+  - [ ] Support lookups by user, channel, status, and due date
+  - [ ] Add serialization/deserialization utilities
   - **Files Created:**
-    - `server/plugins/ai-suite/server/scheduler/job.go`
+    - `server/plugins/ai-suite/server/actionitems/repository.go`
+
+- [ ] **4.4 Message Hook Integration**
+  - [ ] Extend `MessageHasBeenPosted` hook to call detection asynchronously
+  - [ ] Prevent duplicate action items on message edits
+  - [ ] Add trace logging + metrics around detection accuracy
   - **Files Modified:**
-    - `server/plugins/ai-suite/server/plugin.go` (start/stop job on activate/deactivate)
+    - `server/plugins/ai-suite/server/hooks.go`
 
-- [ ] **4.4 Scheduler HTTP Handlers**
-  - [ ] Create POST /schedule endpoint (create)
-  - [ ] Create GET /schedule endpoint (list user's messages)
-  - [ ] Create PUT /schedule/{id} endpoint (edit)
-  - [ ] Create DELETE /schedule/{id} endpoint (cancel)
-  - [ ] Add permission validation
+- [ ] **4.5 Reminder Scheduler**
+  - [ ] Implement due-soon/overdue reminder worker with batching
+  - [ ] Send DM notifications + channel reminders when appropriate
+  - [ ] Respect user reminder preferences and quiet hours
   - **Files Created:**
-    - `server/plugins/ai-suite/server/scheduler/handler.go`
-  - **Files Modified:**
-    - `server/plugins/ai-suite/server/api.go`
-
-- [ ] **4.5 Slash Command Implementation**
-  - [ ] Register `/schedule` command
-  - [ ] Parse command syntax (datetime + message)
-  - [ ] Handle subcommands (list, cancel)
-  - [ ] Return confirmation response
-  - **Files Created:**
-    - `server/plugins/ai-suite/server/scheduler/commands.go`
+    - `server/plugins/ai-suite/server/actionitems/reminders.go`
   - **Files Modified:**
     - `server/plugins/ai-suite/server/plugin.go`
 
-- [ ] **4.6 Scheduler API Service (Webapp)**
-  - [ ] Create scheduler API client
-  - [ ] Implement CRUD methods
-  - [ ] Add TypeScript types
+- [ ] **4.6 Action Item HTTP Handlers**
+  - [ ] Create endpoints for list, filter, create, update, complete, and delete
+  - [ ] Enforce channel membership and role permissions
+  - [ ] Return linked post metadata for every item
   - **Files Created:**
-    - `server/plugins/ai-suite/webapp/src/services/schedulerApi.ts`
+    - `server/plugins/ai-suite/server/actionitems/handler.go`
+  - **Files Modified:**
+    - `server/plugins/ai-suite/server/api.go`
 
-- [ ] **4.7 Scheduler Hook**
-  - [ ] Create useScheduler custom hook
-  - [ ] Manage scheduled messages state
-  - [ ] Implement CRUD operations
+- [ ] **4.7 Slash Command Implementation**
+  - [ ] Register `/actionitems` command with subcommands (mine, team, complete, create)
+  - [ ] Provide ephemeral responses with quick actions
+  - [ ] Add autocomplete support for status filters
   - **Files Created:**
-    - `server/plugins/ai-suite/webapp/src/hooks/useScheduler.ts`
+    - `server/plugins/ai-suite/server/actionitems/commands.go`
+  - **Files Modified:**
+    - `server/plugins/ai-suite/server/plugin.go`
 
-- [ ] **4.8 DateTime Picker Component**
-  - [ ] Create date/time picker component
-  - [ ] Add timezone selector
-  - [ ] Implement validation (future dates only)
+- [ ] **4.8 Action Items API Service (Webapp)**
+  - [ ] Build API client with pagination, filters, and optimistic updates
+  - [ ] Surface errors + retry helpers
   - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/services/actionItemsApi.ts`
+
+- [ ] **4.9 `useActionItems` Hook**
+  - [ ] Manage personal/team item state, filters, and bulk actions
+  - [ ] Handle optimistic completion + reminders toggles
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/hooks/useActionItems.ts`
+
+- [ ] **4.10 Personal Dashboard Component**
+  - [ ] Build grouped lists (Overdue, Due Soon, No Deadline, Completed)
+  - [ ] Add filtering by channel/status and quick actions (mark done, view post)
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/components/actionitems/ActionItemsDashboard.tsx`
+
+- [ ] **4.11 Action Item Card Component**
+  - [ ] Display assignee avatars, deadlines, source channel, and context buttons
+  - [ ] Support inline status updates + reminder toggles
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/components/actionitems/ActionItemCard.tsx`
+
+- [ ] **4.12 Team Action Items View**
+  - [ ] Provide manager-facing table grouped by assignee
+  - [ ] Include filters for channel/team and export to CSV
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/components/actionitems/TeamActionItemsView.tsx`
+
+- [ ] **4.13 Create/Edit Modal & Due Date Picker**
+  - [ ] Allow manual creation/edits with assignee selector + due date picker
+  - [ ] Reuse deadline picker for reminder scheduling
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/components/actionitems/CreateActionItemModal.tsx`
     - `server/plugins/ai-suite/webapp/src/components/common/DateTimePicker.tsx`
-    - `server/plugins/ai-suite/webapp/src/components/scheduler/TimezonePicker.tsx`
 
-- [ ] **4.9 Schedule Modal Component**
-  - [ ] Create schedule message modal
-  - [ ] Show message preview
-  - [ ] Integrate datetime picker
-  - [ ] Add confirm/cancel actions
-  - **Files Created:**
-    - `server/plugins/ai-suite/webapp/src/components/scheduler/ScheduleModal.tsx`
-    - `server/plugins/ai-suite/webapp/src/styles/scheduler.css`
-
-- [ ] **4.10 Scheduled Messages List**
-  - [ ] Create management list view
-  - [ ] Display all scheduled messages
-  - [ ] Show status, destination, time
-  - [ ] Add edit/cancel actions per item
-  - **Files Created:**
-    - `server/plugins/ai-suite/webapp/src/components/scheduler/ScheduledMessagesList.tsx`
-    - `server/plugins/ai-suite/webapp/src/components/scheduler/ScheduledMessageItem.tsx`
-
-- [ ] **4.11 Send Button Integration**
-  - [ ] Modify send button to include dropdown
-  - [ ] Add "Schedule Message" option
-  - [ ] Trigger schedule modal on click
-  - **Files Modified:**
-    - `server/plugins/ai-suite/webapp/src/index.tsx`
-
-- [ ] **4.12 Main Menu Integration**
-  - [ ] Add "Scheduled Messages" to main menu
-  - [ ] Open scheduled messages list view
-  - **Files Modified:**
-    - `server/plugins/ai-suite/webapp/src/index.tsx`
-
-- [ ] **4.13 Verification**
-  - [ ] Test scheduling via slash command with various datetime formats
-  - [ ] Test scheduling via UI modal
-  - [ ] Verify message is sent at correct time
-  - [ ] Test editing scheduled message
-  - [ ] Test cancelling scheduled message
-  - [ ] Verify timezone handling
+- [ ] **4.14 Verification**
+  - [ ] Test automatic detection across public/private channels
+  - [ ] Verify reminders trigger on schedule and respect preferences
+  - [ ] Validate slash command + dashboard parity for permissions
 
 ---
 
-## PR #5: Channel Analytics Dashboard Feature
+## PR #5: Message Formatting Assistant Feature
+
+**Branch:** `feature/message-formatting`  
+**Description:** Deliver the AI message formatting assistant, spanning formatter services, slash commands, and rich composer integrations with previews and profile controls.
+
+### Tasks
+
+- [ ] **5.1 Formatter Service Core**
+  - [ ] Create formatter service struct with dependency injection
+  - [ ] Support multiple formatting actions (professional, concise, list, code, grammar)
+  - [ ] Implement OpenAI request/response handling plus safety checks
+  - **Files Created:**
+    - `server/plugins/ai-suite/server/formatter/service.go`
+    - `server/plugins/ai-suite/server/formatter/types.go`
+
+- [ ] **5.2 Prompt Templates & Profiles**
+  - [ ] Define reusable prompt templates for each formatting profile
+  - [ ] Map profile metadata (label, emoji, description) for UI consumption
+  - [ ] Add unit tests for prompt serialization
+  - **Files Created:**
+    - `server/plugins/ai-suite/server/formatter/prompts.go`
+    - `server/plugins/ai-suite/server/formatter/profiles.go`
+
+- [ ] **5.3 Configuration & Preferences**
+  - [ ] Add configuration fields for default profile, auto-suggest toggle, preview requirement
+  - [ ] Persist per-user formatter preferences in KV store
+  - [ ] Validate configuration ranges
+  - **Files Modified:**
+    - `server/plugins/ai-suite/server/configuration.go`
+    - `server/plugins/ai-suite/plugin.json`
+
+- [ ] **5.4 Formatter HTTP Handlers**
+  - [ ] Create endpoint for preview/apply formatting actions
+  - [ ] Support custom instructions payload and validation
+  - [ ] Return diff metadata for UI highlighting
+  - **Files Created:**
+    - `server/plugins/ai-suite/server/formatter/handler.go`
+  - **Files Modified:**
+    - `server/plugins/ai-suite/server/api.go`
+
+- [ ] **5.5 Slash Command Implementation**
+  - [ ] Register `/format` command with action + optional profile args
+  - [ ] Return ephemeral previews with accept/reject buttons
+  - **Files Created:**
+    - `server/plugins/ai-suite/server/formatter/commands.go`
+  - **Files Modified:**
+    - `server/plugins/ai-suite/server/plugin.go`
+
+- [ ] **5.6 MessageWillBePosted Hook Integration**
+  - [ ] Add optional auto-suggestion pipeline that triggers formatter preview
+  - [ ] Ensure hook respects performance budget and user opt-outs
+  - **Files Modified:**
+    - `server/plugins/ai-suite/server/hooks.go`
+
+- [ ] **5.7 Formatter API Service (Webapp)**
+  - [ ] Implement request helpers for preview/apply endpoints
+  - [ ] Handle large payload responses gracefully
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/services/formatterApi.ts`
+
+- [ ] **5.8 `useFormatter` Hook**
+  - [ ] Manage formatter state machine (idle → formatting → preview)
+  - [ ] Cache latest preview per post draft
+  - [ ] Expose helpers for applying results back into composer
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/hooks/useFormatter.ts`
+
+- [ ] **5.9 Formatting Menu Component**
+  - [ ] Add composer toolbar button + dropdown for all formatter actions
+  - [ ] Wire to hook actions and disable while formatting
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/components/formatter/FormattingMenu.tsx`
+
+- [ ] **5.10 Preview Modal**
+  - [ ] Show side-by-side original vs formatted text with diff highlighting
+  - [ ] Provide apply, copy, dismiss actions plus keyboard shortcuts
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/components/formatter/PreviewModal.tsx`
+
+- [ ] **5.11 Profile Selector & Settings Panel**
+  - [ ] Implement quick profile chips + custom instruction entry
+  - [ ] Surface user preference toggles (auto-suggest, default profile)
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/components/formatter/ProfileSelector.tsx`
+    - `server/plugins/ai-suite/webapp/src/components/formatter/FormatterSettingsPanel.tsx`
+
+- [ ] **5.12 Composer Suggestions Bar & Styling**
+  - [ ] Display inline suggestion summary (issues found, recommended action)
+  - [ ] Integrate with composer to insert formatted text
+  - [ ] Add formatter-specific styling
+  - **Files Created:**
+    - `server/plugins/ai-suite/webapp/src/components/formatter/SuggestionsBar.tsx`
+    - `server/plugins/ai-suite/webapp/src/styles/formatter.css`
+  - **Files Modified:**
+    - `server/plugins/ai-suite/webapp/src/index.tsx`
+
+- [ ] **5.13 Verification**
+  - [ ] Test `/format` slash command end-to-end
+  - [ ] Validate composer integration across browsers
+  - [ ] Confirm permissions + configuration toggles work for all roles
+
+---
+
+## PR #6: Channel Analytics Dashboard Feature
 
 **Branch:** `feature/analytics`  
 **Description:** Implement channel analytics data collection, aggregation, and interactive dashboard UI with charts and metrics.
@@ -575,7 +666,7 @@ mattermost/
 
 ---
 
-## PR #6: Testing, Documentation & Polish
+## PR #7: Testing, Documentation & Polish
 
 **Branch:** `feature/testing-docs`  
 **Description:** Add comprehensive tests, complete documentation, fix bugs, and prepare for release.
@@ -584,14 +675,14 @@ mattermost/
 
 - [ ] **7.1 Server Unit Tests**
   - [ ] Write summarizer service tests
-  - [ ] Write scheduler service tests
-  - [ ] Write notification classifier tests
+  - [ ] Write action item service tests
+  - [ ] Write formatter service tests
   - [ ] Write analytics aggregator tests
   - [ ] Write OpenAI client tests (mocked)
   - **Files Created:**
     - `server/plugins/ai-suite/test/server/summarizer_test.go`
-    - `server/plugins/ai-suite/test/server/scheduler_test.go`
-    - `server/plugins/ai-suite/test/server/notifications_test.go`
+    - `server/plugins/ai-suite/test/server/actionitems_test.go`
+    - `server/plugins/ai-suite/test/server/formatter_test.go`
     - `server/plugins/ai-suite/test/server/analytics_test.go`
 
 - [ ] **7.2 API Endpoint Tests**

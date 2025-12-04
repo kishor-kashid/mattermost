@@ -21,6 +21,9 @@ web/static/js/libs*.js
 config/active.dat
 config/logging.json
 /plugins
+!/plugins/
+!/plugins/ai-suite/
+!/plugins/ai-suite/**
 
 # go.work file
 go.work

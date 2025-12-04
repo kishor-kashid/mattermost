@@ -970,20 +970,20 @@ Used for: Summaries, Notification Center
 
 #### 7.2.2 Modal Dialogs
 
-Used for: Schedule Message, Settings, Date Range Picker
+Used for: Action Item creation/editing, Formatting preview/confirm, Date Range Picker
 
 #### 7.2.3 Channel Header Button
 
 Dropdown menu with plugin actions:
 - Summarize Channel
 - View Analytics
-- Schedule Message
+- Manage Action Items
 
 #### 7.2.4 Main Menu Items
 
 Under plugin section:
-- Scheduled Messages
-- Notification Settings
+- Action Items Dashboard
+- Formatting Preferences
 - Channel Analytics
 
 ### 7.3 Interaction Patterns
@@ -991,9 +991,9 @@ Under plugin section:
 | Action | Trigger | Response |
 |--------|---------|----------|
 | Summarize Thread | Right-click → Summarize | RHS opens with loading → Summary |
-| Schedule Message | Send button dropdown | Modal opens |
+| Manage Action Items | Channel menu → Action Items / `/actionitems` | RHS dashboard or modal opens |
+| Apply Formatting | Composer toolbar → AI Format | Preview modal opens with before/after |
 | View Analytics | Channel menu → Analytics | New tab/modal with dashboard |
-| Check Notifications | Bell icon | RHS opens with notification list |
 
 ---
 
@@ -1158,16 +1158,16 @@ Value: {
 }
 ```
 
-#### POST /plugins/ai-suite/api/v1/schedule
+#### POST /plugins/ai-suite/api/v1/actionitems
 
 **Request:**
 ```json
 {
   "channel_id": "string",
-  "message": "string",
-  "scheduled_at": "ISO8601 timestamp",
-  "timezone": "string (IANA timezone)",
-  "file_ids": ["string"]
+  "description": "string",
+  "assignee_id": "string",
+  "due_at": "ISO8601 timestamp (optional)",
+  "source_post_id": "string (optional)"
 }
 ```
 
@@ -1175,36 +1175,61 @@ Value: {
 ```json
 {
   "id": "string",
-  "status": "scheduled",
-  "scheduled_at": "ISO8601 timestamp",
-  "message_preview": "string"
+  "channel_id": "string",
+  "description": "string",
+  "assignee_id": "string",
+  "status": "active",
+  "due_at": "ISO8601 timestamp (nullable)",
+  "created_at": "ISO8601 timestamp"
 }
 ```
 
-#### GET /plugins/ai-suite/api/v1/schedule
+#### GET /plugins/ai-suite/api/v1/actionitems
+
+**Query Parameters:**
+- `channel_id`: filter to a single channel (optional)
+- `assignee_id`: filter to a specific user (optional)
+- `status`: `active`, `completed`, or `dismissed` (optional)
 
 **Response:**
 ```json
 {
-  "scheduled_messages": [{
+  "action_items": [{
     "id": "string",
     "channel_id": "string",
     "channel_name": "string",
-    "message_preview": "string",
-    "scheduled_at": "ISO8601 timestamp",
-    "status": "pending" | "sent" | "cancelled",
-    "created_at": "ISO8601 timestamp"
+    "description": "string",
+    "assignee_id": "string",
+    "status": "active" | "completed" | "dismissed",
+    "due_at": "ISO8601 timestamp (nullable)",
+    "source_post_id": "string",
+    "created_at": "ISO8601 timestamp",
+    "completed_at": "ISO8601 timestamp (nullable)"
   }]
 }
 ```
 
-#### DELETE /plugins/ai-suite/api/v1/schedule/{message_id}
+#### PUT /plugins/ai-suite/api/v1/actionitems/{action_item_id}
+
+**Request:**
+```json
+{
+  "status": "active" | "completed" | "dismissed",
+  "assignee_id": "string (optional)",
+  "due_at": "ISO8601 timestamp (optional)"
+}
+```
 
 **Response:**
 ```json
 {
   "success": true,
-  "message": "Scheduled message cancelled"
+  "action_item": {
+    "id": "string",
+    "status": "completed",
+    "assignee_id": "string",
+    "due_at": "ISO8601 timestamp (nullable)"
+  }
 }
 ```
 
@@ -1243,7 +1268,7 @@ Value: {
 | Message content sent to OpenAI | Document in plugin description; admin can disable |
 | Analytics tracking | Only aggregate data stored; no individual message tracking |
 | Notification content | Stored temporarily; auto-deleted after 7 days |
-| Scheduled messages | Only visible to message author |
+| Action items | Only visible to channel members with access to the originating post; DM reminders sent only to assignee |
 
 ### 10.3 Data Retention
 
@@ -1251,7 +1276,7 @@ Value: {
 |-----------|------------------|
 | Summary cache | 24 hours |
 | Analytics aggregates | 90 days |
-| Scheduled messages (sent) | 7 days |
+| Action items (active) | Until completed or dismissed |
 | Notification history | 7 days |
 | User preferences | Until user deletes account |
 
@@ -1263,7 +1288,7 @@ Value: {
 | Summarize private channel | ✅ (if member) | ✅ (if member) | ✅ |
 | View public channel analytics | ✅ (if member) | ✅ | ✅ |
 | View private channel analytics | ✅ (if member) | ✅ (if member) | ✅ |
-| Schedule messages | ✅ | ✅ | ✅ |
+| Manage action items | ✅ (if member) | ✅ | ✅ |
 | Configure plugin settings | ❌ | ❌ | ✅ |
 
 ---
@@ -1277,7 +1302,7 @@ Value: {
 | Thread summarization (< 50 messages) | 3 seconds | 10 seconds |
 | Channel summarization (< 500 messages) | 5 seconds | 15 seconds |
 | Analytics dashboard load | 1 second | 3 seconds |
-| Schedule message | 200 ms | 1 second |
+| Create/complete action item | 200 ms | 1 second |
 | Notification classification | 50 ms | 200 ms |
 
 ### 11.2 Throughput Requirements
@@ -1286,7 +1311,7 @@ Value: {
 |--------|-------------|
 | Concurrent summarization requests | 10 per server |
 | Messages processed for notifications | 1000/second |
-| Scheduled messages per user | 50 max |
+| Active action items per user | 200 max |
 | Analytics data points | 90 days of daily aggregates |
 
 ### 11.3 Resource Limits
@@ -1341,7 +1366,7 @@ Value: {
 | OpenAI API rate limits exceeded | Medium | High | Implement caching, queue requests, configurable limits |
 | OpenAI API costs exceed budget | Medium | Medium | Set daily/monthly spending caps, optimize prompts |
 | Large channels cause timeout | Medium | Medium | Paginate messages, set maximum message count |
-| Scheduled messages lost on server restart | Low | High | Persist to database, recover on startup |
+| Reminder worker backlog (action items) | Low | High | Persist reminders in KV store, restart-safe scheduler with retries |
 | Notification classification inaccurate | Medium | Low | Allow user feedback, manual override |
 | Plugin conflicts with other plugins | Low | Medium | Namespace all resources, test with popular plugins |
 
@@ -1410,7 +1435,7 @@ Value: {
 - **Smart Notifications** - AI-powered notification prioritization and filtering
 - Action Item Extractor
 - Semantic Search with vector embeddings
-- Recurring scheduled messages
+- Recurring reminder rules for action items
 - Multi-LLM support (Anthropic, local Ollama)
 
 ### 16.2 Version 1.2 (Potential)

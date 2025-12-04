@@ -1,9 +1,9 @@
 # Active Context
 
 ## Current Work Focus
-**Planning and specification of Mattermost AI Productivity Suite Plugin**
+**Plugin implementation of the Mattermost AI Productivity Suite (PR #1 complete, PR #2 next)**
 
-We are building a plugin that adds 4 AI-powered features to enhance team productivity in Mattermost.
+We are actively building the 4-feature AI plugin; the scaffold is merged and we’re preparing the OpenAI/core services layer.
 
 ## Recent Changes
 - ✅ Created Memory Bank documentation structure
@@ -17,13 +17,17 @@ We are building a plugin that adds 4 AI-powered features to enhance team product
 - ✅ **Added**: Action Item Extractor feature
 - ✅ **Added**: Message Formatting Assistant feature
 - ✅ **Configured**: Message limits (500 max, configurable)
+- ✅ **Aligned**: Task list PRs now match scoped features (PR4 Action Items, PR5 Formatting, PR6 Analytics) with updated testing coverage
+- ✅ **Synced**: PRD updated to remove legacy scheduled-messages scope and document action items + formatter flows
+- ✅ **Completed PR #1**: Added plugin manifest, Go module (with `server/public` replace), Makefile, README/SETUP docs, server entrypoint/config, and placeholder webapp bundle
+- ✅ **Build Guidance**: Documented that `GOWORK=off` is required when running `go build`/`make bundle` inside the plugin and noted npm’s `--legacy-peer-deps` workaround for TypeScript peer conflicts
 
 ## Next Steps
 1. ✅ Complete codebase analysis
 2. ✅ Document architecture and setup
 3. ✅ User successfully ran local development setup
 4. ✅ Finalize plugin feature specifications
-5. ⏳ **Begin PR #1**: Project initialization and plugin scaffold
+5. ✅ **PR #1 Complete**: Project initialization and plugin scaffold
 6. ⏳ **Begin PR #2**: OpenAI integration and core services
 7. ⏳ Continue through remaining PRs
 
@@ -71,7 +75,8 @@ We are building a plugin that adds 4 AI-powered features to enhance team product
 - ✅ Task list created (86 tasks, 7 PRs)
 - ✅ Architecture designed
 - ✅ API specifications defined
-- ⏳ Ready to begin plugin development
+- ✅ Plugin scaffold builds (`make bundle`) when run with `GOWORK=off` and npm legacy peer deps
+- ⏳ Ready to implement OpenAI + core services (PR #2)
 
 ## Plugin Architecture Decisions
 - **Backend Services**: Summarizer, Analytics, ActionItems, Formatter
@@ -86,6 +91,7 @@ We are building a plugin that adds 4 AI-powered features to enhance team product
 3. **Caching Strategy**: 24-hour summary cache to reduce API costs
 4. **Performance**: Target <5 seconds for summarization, <1 second for analytics
 5. **Permissions**: All features respect Mattermost's channel membership permissions
+6. **Build Tooling**: When compiling from `server/plugins/ai-suite`, set `GOWORK=off` (workspace otherwise points to monorepo root). Webapp npm install currently requires `--legacy-peer-deps` due to `@mattermost/types` optional TypeScript 4.x peer.
 
 ## Development Workflow
 ```
