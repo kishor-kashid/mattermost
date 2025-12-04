@@ -1,9 +1,9 @@
 # Active Context
 
 ## Current Work Focus
-**Plugin implementation of the Mattermost AI Productivity Suite (PR #1 complete, PR #2 next)**
+**Plugin implementation of the Mattermost AI Productivity Suite (PR #2 complete, PR #3 next)**
 
-We are actively building the 4-feature AI plugin; the scaffold is merged and we’re preparing the OpenAI/core services layer.
+We now have the shared OpenAI, storage, and API foundations in place; next up is delivering the feature layers (summaries, action items, analytics, formatter).
 
 ## Recent Changes
 - ✅ Created Memory Bank documentation structure
@@ -20,6 +20,7 @@ We are actively building the 4-feature AI plugin; the scaffold is merged and we�
 - ✅ **Aligned**: Task list PRs now match scoped features (PR4 Action Items, PR5 Formatting, PR6 Analytics) with updated testing coverage
 - ✅ **Synced**: PRD updated to remove legacy scheduled-messages scope and document action items + formatter flows
 - ✅ **Completed PR #1**: Added plugin manifest, Go module (with `server/public` replace), Makefile, README/SETUP docs, server entrypoint/config, and placeholder webapp bundle
+- ✅ **Completed PR #2**: Built OpenAI GPT-4 client wrapper + prompt templates, KV store abstraction, REST API/router middleware, plugin configuration settings, and base webapp API client/common UI components
 - ✅ **Build Guidance**: Documented that `GOWORK=off` is required when running `go build`/`make bundle` inside the plugin and noted npm’s `--legacy-peer-deps` workaround for TypeScript peer conflicts
 
 ## Next Steps
@@ -28,8 +29,9 @@ We are actively building the 4-feature AI plugin; the scaffold is merged and we�
 3. ✅ User successfully ran local development setup
 4. ✅ Finalize plugin feature specifications
 5. ✅ **PR #1 Complete**: Project initialization and plugin scaffold
-6. ⏳ **Begin PR #2**: OpenAI integration and core services
-7. ⏳ Continue through remaining PRs
+6. ✅ **PR #2 Complete**: OpenAI integration and core services
+7. ⏳ **Begin PR #3**: Summarization feature implementation
+8. ⏳ Continue through remaining PRs
 
 ## Active Decisions and Considerations
 
@@ -76,7 +78,8 @@ We are actively building the 4-feature AI plugin; the scaffold is merged and we�
 - ✅ Architecture designed
 - ✅ API specifications defined
 - ✅ Plugin scaffold builds (`make bundle`) when run with `GOWORK=off` and npm legacy peer deps
-- ⏳ Ready to implement OpenAI + core services (PR #2)
+- ✅ GPT-4 OpenAI client, KV store service, REST API router, and base webapp infrastructure implemented (PR #2)
+- ⏳ Ready to implement summarization feature (PR #3)
 
 ## Plugin Architecture Decisions
 - **Backend Services**: Summarizer, Analytics, ActionItems, Formatter

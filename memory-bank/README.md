@@ -4,7 +4,7 @@ This directory contains comprehensive documentation about the Mattermost codebas
 
 ## 🎯 Current Project: AI Productivity Suite Plugin
 
-**Status**: PR #1 complete → Preparing PR #2  
+**Status**: PR #2 complete → Preparing PR #3  
 **Timeline**: 6-7 days, 86 tasks, 7 PRs  
 **Features**: 4 AI-powered productivity enhancements
 
@@ -16,8 +16,9 @@ This directory contains comprehensive documentation about the Mattermost codebas
 
 ### Next Steps
 - [x] PR #1: Project Initialization & Plugin Scaffold
-- [ ] PR #2: OpenAI Integration & Core Services
-- [ ] Continue through PRs #3-7
+- [x] PR #2: OpenAI Integration & Core Services
+- [ ] PR #3: AI Message Summarization
+- [ ] Continue through PRs #4-7
 
 📄 **Full Details**: See `mattermost-prd.md` and `mattermost-task-list.md` in project root
 

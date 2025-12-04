@@ -59,7 +59,7 @@
 
 ## Current Development Phase
 **Phase**: Plugin Development – Execution
-**State**: PR #1 (Project Initialization & Scaffold) complete; preparing PR #2 (OpenAI integration)
+**State**: PR #2 (OpenAI integration & core services) complete; preparing PR #3 (Summarization)
 
 ### Completed Planning Tasks
 - [x] Mattermost local environment running
@@ -83,9 +83,11 @@
   - Created plugin manifest, Go module, Makefile, README/docs
   - Implemented server entrypoint/configuration and webapp bootstrap
   - Verified `make bundle` path with `GOWORK=off` + npm legacy peer deps workaround
+- [x] **PR #2: OpenAI Integration & Core Services**
+  - Added GPT-4 OpenAI client, prompt templates, config-controlled API key/model settings, KV store abstraction, REST API router/middleware, base webapp API client + common UI components
+  - Documented admin-only key configuration and ensured plugin tests run with `GOWORK=off go test ./...`
 
 ### Ready to Start
-- [ ] PR #2: OpenAI Integration & Core Services (8 tasks)
 - [ ] PR #3: AI Message Summarization (12 tasks)
 - [ ] PR #4: Action Item Extractor (14 tasks)
 - [ ] PR #5: Message Formatting Assistant (13 tasks)
@@ -107,12 +109,12 @@ None identified yet. Build notes: set `GOWORK=off` when compiling the plugin mod
 - **Goal**: Working "Hello World" plugin
 
 ### PR #2: OpenAI Integration (Day 3)
-- OpenAI client wrapper
-- Prompt template system
-- KV store implementation
-- REST API foundation
-- Base webapp API client
-- **Goal**: OpenAI integration working
+- ✅ OpenAI client wrapper
+- ✅ Prompt template system
+- ✅ KV store implementation
+- ✅ REST API foundation
+- ✅ Base webapp API client + common UI components
+- **Goal**: OpenAI integration working ✅
 
 ### PR #3: Summarization (Day 4)
 - Message fetching and formatting

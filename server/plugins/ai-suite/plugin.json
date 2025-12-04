@@ -21,7 +21,58 @@
     },
     "settings_schema": {
         "display_name": "AI Productivity Suite",
-        "settings": []
+        "settings": [
+            {
+                "key": "openai_api_key",
+                "display_name": "OpenAI API Key",
+                "type": "text",
+                "help_text": "Server-side API key used when calling the OpenAI Chat Completions API (stored encrypted).",
+                "placeholder": "sk-...",
+                "default": "",
+                "is_secret": true
+            },
+            {
+                "key": "openai_model",
+                "display_name": "Default OpenAI Model",
+                "type": "dropdown",
+                "help_text": "Model used for summarization, analytics classification, and formatting. GPT-4 is the default.",
+                "default": "gpt-4",
+                "options": [
+                    {
+                        "display_name": "GPT-4",
+                        "value": "gpt-4"
+                    },
+                    {
+                        "display_name": "GPT-3.5 Turbo",
+                        "value": "gpt-3.5-turbo"
+                    }
+                ]
+            },
+            {
+                "key": "api_rate_limit",
+                "display_name": "OpenAI Requests Per Minute",
+                "type": "number",
+                "help_text": "Maximum chat completion requests per minute (used for client-side throttling).",
+                "placeholder": "60",
+                "default": 60
+            },
+            {
+                "key": "request_timeout_secs",
+                "display_name": "OpenAI Request Timeout (seconds)",
+                "type": "number",
+                "help_text": "Time in seconds before OpenAI requests are cancelled.",
+                "placeholder": "30",
+                "default": 30
+            },
+            {
+                "key": "openai_retry_attempts",
+                "display_name": "OpenAI Retry Attempts",
+                "type": "number",
+                "help_text": "Number of times the plugin retries failed OpenAI requests (1-6).",
+                "placeholder": "3",
+                "default": 3
+            }
+        ]
     }
 }
 

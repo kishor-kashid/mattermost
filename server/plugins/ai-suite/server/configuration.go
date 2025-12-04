@@ -8,6 +8,8 @@ import (
 type configuration struct {
 	OpenAIAPIKey        string `json:"openai_api_key"`
 	OpenAIModel         string `json:"openai_model"`
+	OpenAIBaseURL       string `json:"openai_base_url"`
+	OpenAIRetryAttempts int    `json:"openai_retry_attempts"`
 	MaxSummaryMessages  int    `json:"max_summary_messages"`
 	APIRateLimit        int    `json:"api_rate_limit"`
 	RequestTimeoutSecs  int    `json:"request_timeout_secs"`
@@ -19,10 +21,11 @@ type configuration struct {
 
 func newConfiguration() *configuration {
 	return &configuration{
-		OpenAIModel:         "gpt-3.5-turbo",
+		OpenAIModel:         "gpt-4",
 		MaxSummaryMessages:  500,
 		APIRateLimit:        60,
 		RequestTimeoutSecs:  30,
+		OpenAIRetryAttempts: 3,
 		EnableSummarization: true,
 		EnableAnalytics:     true,
 		EnableActionItems:   true,
@@ -41,7 +44,7 @@ func (c *configuration) Clone() *configuration {
 
 func (c *configuration) ApplyDefaults() {
 	if c.OpenAIModel == "" {
-		c.OpenAIModel = "gpt-3.5-turbo"
+		c.OpenAIModel = "gpt-4"
 	}
 
 	if c.MaxSummaryMessages == 0 {
@@ -54,6 +57,10 @@ func (c *configuration) ApplyDefaults() {
 
 	if c.RequestTimeoutSecs == 0 {
 		c.RequestTimeoutSecs = 30
+	}
+
+	if c.OpenAIRetryAttempts == 0 {
+		c.OpenAIRetryAttempts = 3
 	}
 }
 
@@ -68,6 +75,10 @@ func (c *configuration) Validate() error {
 
 	if c.RequestTimeoutSecs < 5 || c.RequestTimeoutSecs > 60 {
 		return fmt.Errorf("RequestTimeoutSecs must be between 5 and 60")
+	}
+
+	if c.OpenAIRetryAttempts < 1 || c.OpenAIRetryAttempts > 6 {
+		return fmt.Errorf("OpenAIRetryAttempts must be between 1 and 6")
 	}
 
 	return nil
