@@ -106,88 +106,110 @@ webapp/
 
 ---
 
-## Our Plugin Architecture Patterns
+## Our AI Feature Integration Patterns
 
-### Plugin Structure Pattern
+### Native Integration Structure
 ```
-mattermost-plugin-ai-suite/
-├── server/                    # Go backend
-│   ├── plugin.go              # Entry point (OnActivate, ServeHTTP)
-│   ├── configuration.go       # Config handling
-│   ├── api.go                 # REST router
-│   ├── hooks.go               # Mattermost hooks
-│   │
-│   ├── openai/                # Service: OpenAI integration
-│   ├── summarizer/            # Service: Summarization
-│   ├── analytics/             # Service: Analytics
-│   ├── actionitems/           # Service: Action items
-│   ├── formatter/             # Service: Formatting
-│   └── store/                 # Data access (KV store)
+mattermost/
+├── server/channels/
+│   ├── api4/
+│   │   └── ai.go              # AI route registration
+│   │   └── ai_*.go            # Feature-specific API handlers
+│   ├── app/
+│   │   ├── ai.go              # AI service initialization
+│   │   ├── ai_*.go            # Business logic services
+│   │   └── openai/            # OpenAI client package
+│   ├── store/
+│   │   └── sqlstore/
+│   │       └── ai_*.go        # Database operations
+│   ├── jobs/
+│   │   └── ai_*.go            # Background jobs
+│   └── db/migrations/
+│       └── postgres/
+│           └── 000XXX_create_ai_*.sql  # Table migrations
 │
-└── webapp/                    # React frontend
-    └── src/
-        ├── components/        # UI components
-        ├── hooks/             # React hooks
-        └── services/          # API clients
+└── webapp/channels/src/
+    ├── components/ai/         # AI UI components
+    ├── actions/ai_*.ts        # Redux actions
+    ├── reducers/ai/           # Redux state
+    ├── selectors/ai_*.ts      # Data selectors
+    └── client/ai.ts           # API client methods
 ```
 
-### Plugin Design Patterns Used
+### Native Integration Patterns Used
 
-1. **Service Layer Pattern**
-   - Each feature has its own service package
-   - Services are injected into plugin struct
-   - Clear separation of concerns
+1. **Layered Architecture Pattern**
+   - API Layer (`api4/`) - HTTP handlers, validation, permissions
+   - Business Logic (`app/`) - Core AI services
+   - Data Layer (`store/`) - Database operations
+   - Jobs Layer (`jobs/`) - Background processing
+   - Clear separation with well-defined interfaces
 
-2. **Key-Value Store Pattern**
-   - All data stored in plugin KV store
-   - No custom database tables
-   - Namespaced keys (e.g., `summary:channel_id:timestamp`)
+2. **Database-First Storage**
+   - Dedicated PostgreSQL tables for each feature
+   - Proper migrations with up/down scripts
+   - Indexed for query performance
+   - Transactional integrity
 
-3. **Hook Pattern**
-   - `MessageHasBeenPosted`: Analytics collection, action item detection
-   - `MessageWillBePosted`: Optional formatting suggestions
-   - Minimal performance impact
+3. **Redux State Management (Frontend)**
+   - Actions → Reducers → Selectors pattern
+   - Immutable state updates
+   - Memoized selectors for performance
+   - Integration with existing Mattermost Redux store
 
-4. **API Gateway Pattern**
-   - Single `ServeHTTP` entry point
-   - Routes to feature handlers
-   - Centralized auth/permission checks
+4. **Post Hook Integration**
+   - Extend existing `app.MessageHasBeenPosted()`
+   - Call AI services asynchronously
+   - Non-blocking message flow
+   - Respects existing Mattermost patterns
 
-5. **Caching Strategy**
-   - Summary cache: 24 hours (KV store)
-   - Analytics: 1-hour aggregation cache
-   - Cache invalidation on relevant events
+5. **Background Jobs Pattern**
+   - Use native Mattermost jobs framework
+   - Schedulers for reminders and aggregation
+   - Persistent across restarts
+   - Configurable intervals
 
-### Plugin Integration Points
+6. **Caching Strategy**
+   - Summary cache: 24 hours (AISummaries table)
+   - Analytics: Pre-aggregated daily (AIAnalytics table)
+   - Cache invalidation via TTL (ExpiresAt column)
 
-- **REST API**: Custom endpoints at `/plugins/ai-suite/api/v1/*`
-- **Slash Commands**: 4 commands registered with Mattermost
-- **RHS Panel**: React component injection for summaries
-- **Main Menu**: Analytics dashboard entry
-- **Channel Header**: Quick action dropdowns
-- **Message Composer**: Formatting assistant integration
+### Native Integration Points
+
+- **REST API**: Native endpoints at `/api/v4/ai/*`
+- **Slash Commands**: Registered via `app/slashcommands/`
+- **RHS Panel**: React components in `components/ai/`
+- **Channel Header**: Extended with AI menu items
+- **Message Composer**: AI formatting integration
+- **Redux Store**: AI reducers integrated into root reducer
+- **Database**: 4 new tables with proper migrations
 
 ### Data Flow Patterns
 
 **Summarization Flow:**
 1. User triggers `/summarize` or clicks button
-2. Webapp → REST API → Summarizer service
-3. Fetch messages from Mattermost API
-4. Format → Send to OpenAI → Parse response
-5. Cache result → Return to user
-6. Display in RHS panel
+2. Webapp → Client4.summarizeThread() → `/api/v4/ai/summarize`
+3. API handler validates permissions
+4. App service fetches messages from store
+5. Format → Send to OpenAI → Parse response
+6. Save to AISummaries table (cache)
+7. Return to user → Display in RHS panel via Redux
 
 **Action Item Detection Flow:**
-1. User posts message → `MessageHasBeenPosted` hook
-2. Background check for commitment patterns
+1. User posts message → `app.MessageHasBeenPosted()` extended
+2. AI detector checks for commitments (async)
 3. If detected → OpenAI extraction
-4. Create action item → Notify assignee
-5. Store in KV → Update dashboards
+4. Create action item → Store in AIActionItems table
+5. Notify assignee via DM
+6. Frontend fetches via `/api/v4/ai/actionitems`
+7. Update Redux store → Re-render dashboard
 
 **Analytics Collection Flow:**
-1. Message posted → `MessageHasBeenPosted` hook
+1. Message posted → `app.MessageHasBeenPosted()` extended
 2. Extract metrics (non-blocking)
-3. Aggregate to hourly buckets
-4. Store in KV (rolling 90 days)
-5. Dashboard queries aggregated data
+3. Update AIAnalytics table (upsert for current day)
+4. Background job aggregates hourly
+5. Frontend queries `/api/v4/ai/analytics/{channelId}`
+6. Redux actions update analytics state
+7. Charts re-render with new data
 

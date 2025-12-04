@@ -115,131 +115,158 @@ Key environment variables for development:
 
 ---
 
-## Plugin Development Technical Context
+## AI Feature Integration Technical Context
 
-### Plugin Technologies
+### Native Integration Technologies
 
-#### Backend
-- **Framework**: Mattermost Plugin SDK (server)
+#### Backend (Mattermost Core)
 - **Language**: Go 1.24+
-- **API Client**: Built-in `plugin.API` interface
-- **Storage**: Plugin Key-Value Store
+- **API Layer**: `server/channels/api4/` (REST handlers)
+- **Business Logic**: `server/channels/app/` (services)
+- **Data Access**: `server/channels/store/sqlstore/` (PostgreSQL)
+- **Jobs**: `server/channels/jobs/` (background workers)
+- **Storage**: PostgreSQL database with new AI tables
 - **AI/LLM**: OpenAI Go SDK (`sashabaranov/go-openai`)
-- **JSON**: Standard library `encoding/json`
-- **HTTP**: Built-in `net/http`
+- **HTTP**: Built-in `net/http` + `gorilla/mux`
 
-#### Frontend
-- **Framework**: React (same as Mattermost webapp)
-- **Plugin SDK**: Mattermost webapp plugin SDK
-- **State**: React Hooks + Context API
+#### Frontend (Mattermost Webapp)
+- **Framework**: React 18 (integrated into Mattermost channels)
+- **State Management**: Redux 5 with thunks
+- **Component Location**: `webapp/channels/src/components/ai/`
+- **Actions**: `webapp/channels/src/actions/ai_*.ts`
+- **Reducers**: `webapp/channels/src/reducers/ai/`
 - **Styling**: SCSS (follows Mattermost patterns)
 - **Charts**: Recharts (for analytics)
-- **Build**: Webpack (plugin template)
+- **Build**: Webpack 5 (standard Mattermost build)
 
 #### External Dependencies
 - **OpenAI API**: GPT-4 / GPT-3.5-turbo
 - **API Rate Limits**: 60 requests/minute (configurable)
 - **Cost Management**: Caching, message limits
 
-### Plugin Build System
+### Native Build Integration
 
 ```makefile
-# Key Make targets for plugin development
-make                    # Build both server and webapp
-make dist               # Create distribution package
-make deploy             # Deploy to local Mattermost
-make check-style        # Lint Go and JS code
-make test               # Run all tests
+# Standard Mattermost build commands
+make run-server          # Build and run Go server
+make run-client          # Build and run React webapp
+make test-server         # Run backend tests
+make test-client         # Run frontend tests
+make build-server        # Build server binary only
+make build-client        # Build webapp bundle only
 ```
 
-### Plugin Configuration Schema
+### Configuration Schema
 
+**config.json:**
+```json
+{
+  "AISettings": {
+    "Enable": true,
+    "OpenAIAPIKey": "encrypted_key",
+    "OpenAIModel": "gpt-4",
+    "MaxMessageLimit": 500,
+    "APIRateLimit": 60,
+    "EnableSummarization": true,
+    "EnableAnalytics": true,
+    "EnableActionItems": true,
+    "EnableFormatting": true
+  }
+}
+```
+
+**Go Struct:**
 ```go
-type Configuration struct {
-    OpenAIAPIKey      string  // Encrypted in DB
-    OpenAIModel       string  // "gpt-4" or "gpt-3.5-turbo"
-    MaxMessageLimit   int     // Default: 500
-    APIRateLimit      int     // Default: 60/min
-    EnableSummarization bool  // Default: true
-    EnableAnalytics   bool    // Default: true
+type AISettings struct {
+    Enable             bool
+    OpenAIAPIKey       string
+    OpenAIModel        string
+    MaxMessageLimit    int
+    APIRateLimit       int
+    EnableSummarization bool
+    EnableAnalytics    bool
+    EnableActionItems  bool
+    EnableFormatting   bool
 }
 ```
 
 ### Data Storage Strategy
 
-**Key-Value Store Schema:**
-- Summaries: `summary:{channel_id}:{hash}` → JSON
-- Analytics: `analytics:{channel_id}:{hour}` → Aggregated metrics
-- Action Items: `actionitem:{id}` → Action item object
-- User Prefs: `userprefs:{user_id}` → Preferences JSON
-- Config: `plugin_configuration` → Plugin settings
+**Database Tables:**
+- **AIActionItems**: Action items with assignees, deadlines, status
+- **AISummaries**: Cached summaries with expiration (24h TTL)
+- **AIAnalytics**: Daily aggregated channel metrics
+- **AIPreferences**: Per-user AI feature preferences
 
 **Retention Policies:**
-- Summaries: 24 hours (cache only)
-- Analytics: 90 days rolling
-- Action Items: Until completed/dismissed
+- Summaries: 24 hours (cache with ExpiresAt)
+- Analytics: 90 days rolling (cleanup job)
+- Action Items: Until completed/dismissed (soft delete)
 - User Preferences: Indefinite
 
 ### API Integration Patterns
 
 #### OpenAI API Usage
 - **Endpoint**: `https://api.openai.com/v1/chat/completions`
-- **Authentication**: Bearer token (API key)
+- **Authentication**: Bearer token (from config.AISettings.OpenAIAPIKey)
 - **Error Handling**: Retry with exponential backoff
-- **Rate Limiting**: Client-side throttling
+- **Rate Limiting**: Client-side throttling (configurable)
 - **Timeout**: 30 seconds per request
 
-#### Mattermost Plugin API Usage
-- **Get Messages**: `plugin.API.GetPostsForChannel()`
-- **Create Post**: `plugin.API.CreatePost()`
-- **Get User**: `plugin.API.GetUser()`
-- **KV Operations**: `plugin.API.KVSet()`, `KVGet()`
-- **Permissions**: `plugin.API.HasPermissionToChannel()`
+#### Native Mattermost API Usage
+- **Get Posts**: Direct store access via `app.GetPostsPage()`
+- **Get Channel**: `app.GetChannel()`
+- **Get User**: `app.GetUser()`
+- **Permissions**: `app.HasPermissionToChannel()`
+- **Create Post**: `app.CreatePost()` for notifications
 
 ### Performance Considerations
 
 **Optimization Strategies:**
-1. **Caching**: 24-hour summary cache reduces API calls by 90%+
-2. **Pagination**: Fetch messages in batches (100 per request)
-3. **Background Processing**: Action item detection doesn't block message posting
-4. **Aggregation**: Analytics pre-aggregated hourly
-5. **Lazy Loading**: Dashboard components load data on demand
+1. **Database Caching**: 24-hour summary cache in AISummaries table
+2. **Query Optimization**: Proper indexes on AI tables
+3. **Background Processing**: Jobs don't block message flow
+4. **Pre-aggregation**: Daily analytics aggregation job
+5. **Lazy Loading**: Frontend components fetch on demand
+6. **Redux Memoization**: Reselect for computed state
 
 **Resource Limits:**
-- Max message length for summarization: 500 messages
+- Max messages for summarization: 500 (configurable)
 - Max concurrent OpenAI requests: 5
 - Analytics query limit: 90 days
-- KV storage per plugin: ~100MB estimated
+- Database storage: ~10MB estimated for typical usage
 
 ### Security Implementation
 
 **Data Protection:**
-- API keys encrypted at rest (Mattermost encryption)
-- No message content stored (except summaries, 24h cache)
-- All API calls respect Mattermost permissions
+- API keys encrypted in config (Mattermost encryption)
+- Summaries cached 24h only (auto-expired)
+- All API calls respect native Mattermost permissions
 - No external data transmission (except OpenAI)
 
 **Permission Checks:**
-- User must have channel read access
-- Analytics requires channel membership
+- Use `app.HasPermissionToChannel()` for channel access
+- Respect team membership for analytics
 - Action item visibility follows channel permissions
-- System admin required for plugin configuration
+- System admin required for AISettings configuration
 
 ### Development Dependencies
 
-```json
-// Go dependencies (go.mod)
-{
-  "github.com/mattermost/mattermost-plugin-starter-template": "latest",
-  "github.com/mattermost/mattermost/server/v8": "v8.x",
-  "github.com/sashabaranov/go-openai": "v1.x",
-  "github.com/pkg/errors": "v0.9.x"
-}
+**Backend (Go modules):**
+```go
+require (
+    github.com/mattermost/mattermost/server/public v0.0.0
+    github.com/sashabaranov/go-openai v1.x
+    github.com/pkg/errors v0.9.x
+)
+```
 
-// NPM dependencies (package.json)
+**Frontend (NPM - already in Mattermost):**
+```json
 {
   "react": "^18.2.0",
-  "react-dom": "^18.2.0",
+  "react-redux": "^9.x",
+  "redux": "^5.x",
   "recharts": "^2.x",
   "@mattermost/types": "latest"
 }
@@ -247,19 +274,26 @@ type Configuration struct {
 
 ### Testing Strategy
 
-**Unit Tests:**
-- Go: `*_test.go` files using standard testing package
-- JS: Jest with React Testing Library
-- Coverage target: 90%+
+**Backend Unit Tests:**
+- Go: Standard `*_test.go` files
+- Test app layer services with mocked store
+- Test store layer with test database
+- Coverage target: 80%+
+
+**Frontend Unit Tests:**
+- Jest + React Testing Library
+- Test components, actions, reducers, selectors
+- Mock Client4 API calls
+- Coverage target: 80%+
 
 **Integration Tests:**
-- Mock Mattermost Plugin API
+- API endpoint tests (`api4/*_test.go`)
+- Test complete request/response flow
 - Mock OpenAI API responses
-- Test complete feature workflows
+- Test permissions enforcement
 
-**Manual Testing:**
-- Install plugin on local Mattermost
-- Test each feature end-to-end
-- Verify error handling
-- Check performance metrics
+**E2E Tests (Optional):**
+- Cypress/Playwright tests
+- Test full user workflows
+- Verify UI interactions
 

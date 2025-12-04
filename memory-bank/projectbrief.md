@@ -3,9 +3,9 @@
 ## Overview
 Mattermost is an open-core, self-hosted collaboration platform that offers chat, workflow automation, voice calling, screen sharing, and AI integration. This repository is the primary source for core development on the Mattermost platform.
 
-## Current Project: AI Productivity Suite Plugin
+## Current Project: AI Productivity Suite (Native Feature Integration)
 
-We are developing a **Mattermost AI Productivity Suite** plugin that adds AI-powered features to enhance team productivity and communication efficiency.
+We are developing **AI Productivity Suite** features integrated directly into the Mattermost core codebase to enhance team productivity and communication efficiency. This demonstrates **brownfield development** - extending an existing large-scale production codebase rather than building from scratch.
 
 ## Core Technologies
 - **Backend**: Go (server-side)
@@ -46,23 +46,32 @@ mattermost/
 - Node version: >=18.10.0
 - NPM version: ^9.0.0 || ^10.0.0
 
-## Plugin Development Project
+## AI Productivity Suite Development
 
-### Plugin Features (4 Total)
+### Core Features (4 Total)
 1. **AI Message Summarization** - GPT-powered summaries of threads and channels (max 500 messages, configurable)
 2. **Channel Analytics Dashboard** - Visual insights into communication patterns and metrics
 3. **Action Item Extractor** - Auto-detect tasks and commitments, track with reminders
 4. **Message Formatting Assistant** - AI-powered grammar, tone, and structure improvements
 
-### Plugin Technology Stack
-- **Backend**: Go (Mattermost Plugin SDK)
-- **Frontend**: React + TypeScript (Mattermost webapp integration)
+### Technology Stack (Native Integration)
+- **Backend**: Go (Mattermost core: api4, app, store layers)
+- **Frontend**: React + TypeScript + Redux (Mattermost channels webapp)
+- **Database**: PostgreSQL (new AI tables: AIActionItems, AISummaries, AIAnalytics, AIPreferences)
 - **AI/LLM**: OpenAI GPT-4 / GPT-3.5-turbo API
-- **Storage**: Mattermost Plugin Key-Value Store
-- **Build**: Make + Webpack
+- **Background Jobs**: Native Mattermost jobs framework
+- **Build**: Standard Mattermost build system (Make + Webpack)
+
+### Development Approach
+- **Type**: Brownfield Development (extending existing codebase)
+- **Integration**: Native Mattermost core features, not plugins
+- **Code Location**: 
+  - Backend: `server/channels/app/ai_*.go`, `server/channels/api4/ai_*.go`
+  - Frontend: `webapp/channels/src/components/ai/`, `webapp/channels/src/actions/ai_*.ts`
+- **Database**: Migrations for new AI tables with proper indexes
 
 ### Timeline
 - **Total Duration**: 6-7 days
-- **Scope**: 86 tasks across 7 PRs
-- **Status**: Planning phase complete, ready to begin development
+- **Scope**: 87 tasks across 7 PRs
+- **Status**: Architecture updated to native integration approach
 

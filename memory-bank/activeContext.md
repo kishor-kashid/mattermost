@@ -1,9 +1,9 @@
 # Active Context
 
 ## Current Work Focus
-**Plugin implementation of the Mattermost AI Productivity Suite (PR #3 complete, PR #4 next)**
+**Native feature integration of the Mattermost AI Productivity Suite**
 
-Summaries are now live end-to-end (backend services, caching, slash command, RHS UI). Next we’ll focus on the remaining feature layers (action items, analytics, formatter).
+We have shifted from a plugin-based approach to **native feature integration** to better demonstrate brownfield development skills. This involves integrating AI features directly into the Mattermost core codebase (api4, app, store layers for backend; components, actions, reducers for frontend).
 
 ## Recent Changes
 - ✅ Created Memory Bank documentation structure
@@ -17,32 +17,36 @@ Summaries are now live end-to-end (backend services, caching, slash command, RHS
 - ✅ **Added**: Action Item Extractor feature
 - ✅ **Added**: Message Formatting Assistant feature
 - ✅ **Configured**: Message limits (500 max, configurable)
-- ✅ **Aligned**: Task list PRs now match scoped features (PR4 Action Items, PR5 Formatting, PR6 Analytics) with updated testing coverage
-- ✅ **Synced**: PRD updated to remove legacy scheduled-messages scope and document action items + formatter flows
-- ✅ **Completed PR #1**: Added plugin manifest, Go module (with `server/public` replace), Makefile, README/SETUP docs, server entrypoint/config, and placeholder webapp bundle
-- ✅ **Completed PR #2**: Built OpenAI GPT-4 client wrapper + prompt templates, KV store abstraction, REST API/router middleware, plugin configuration settings, and base webapp API client/common UI components
-- ✅ **Completed PR #3**: Implemented summarizer service + cache, `/summarize` command/endpoint, thread/channel retrieval, RHS React components/hooks, and deployment guidance (GOWORK=off + `npm install --legacy-peer-deps`)
-- ✅ **Build Guidance**: Documented that `GOWORK=off` is required when running `go build`/`make bundle` inside the plugin and noted npm’s `--legacy-peer-deps` workaround for TypeScript peer conflicts
+- ✅ **ARCHITECTURE SHIFT**: Changed from plugin to native feature integration
+- ✅ **Updated PRD**: Reflects native integration (database tables, api4 endpoints, Redux integration)
+- ✅ **Updated Task List**: All 7 PRs rewritten for core Mattermost integration
+- ✅ **Database Design**: Created schema for AIActionItems, AISummaries, AIAnalytics, AIPreferences tables
+- ✅ **API Design**: Changed endpoints from `/plugins/ai-suite/*` to `/api/v4/ai/*`
+- ✅ **Memory Bank Updated**: All documentation reflects brownfield development approach
 
 ## Next Steps
 1. ✅ Complete codebase analysis
 2. ✅ Document architecture and setup
 3. ✅ User successfully ran local development setup
-4. ✅ Finalize plugin feature specifications
-5. ✅ **PR #1 Complete**: Project initialization and plugin scaffold
-6. ✅ **PR #2 Complete**: OpenAI integration and core services
-7. ✅ **PR #3 Complete**: Summarization feature implementation
-8. ⏳ **Begin PR #4**: Action Item Extractor
-9. ⏳ Continue through remaining PRs
+4. ✅ Finalize AI feature specifications
+5. ✅ Update architecture from plugin to native integration
+6. ⏳ **Begin PR #1**: Core infrastructure (database migrations, store layer, OpenAI client)
+7. ⏳ **PR #2**: AI API foundation and prompt system
+8. ⏳ **PR #3**: AI Message Summarization feature
+9. ⏳ **PR #4**: Action Item Extractor feature
+10. ⏳ **PR #5**: Message Formatting Assistant feature
+11. ⏳ **PR #6**: Channel Analytics Dashboard feature
+12. ⏳ **PR #7**: Testing, documentation, and polish
 
 ## Active Decisions and Considerations
 
-### Plugin Development Approach
-- **Plugin Type**: Mattermost Server + Webapp Plugin
-- **Architecture**: Follows Mattermost plugin SDK patterns
-- **Storage**: Using plugin Key-Value Store (no custom DB tables)
+### Native Feature Integration Approach
+- **Development Type**: Brownfield Development (extending existing codebase)
+- **Architecture**: Native Mattermost core integration (api4, app, store, jobs layers)
+- **Storage**: PostgreSQL database tables (AIActionItems, AISummaries, AIAnalytics, AIPreferences)
+- **Frontend**: Redux integration with Mattermost channels webapp
 - **AI Provider**: OpenAI GPT-4 / GPT-3.5-turbo
-- **Build System**: Makefile-based (standard plugin structure)
+- **Build System**: Standard Mattermost build system (Make + Webpack)
 
 ### Feature Decisions
 1. **Message Limits** (Summarization)
@@ -53,8 +57,8 @@ Summaries are now live end-to-end (backend services, caching, slash command, RHS
 2. **Action Item Detection**
    - AI-powered extraction from natural language
    - No external integrations (v1.0)
-   - Stores in plugin KV store
-   - Background processing for reminders
+   - Stores in AIActionItems database table
+   - Background job for reminders (native jobs framework)
 
 3. **Message Formatting**
    - Real-time preview before applying
@@ -64,8 +68,10 @@ Summaries are now live end-to-end (backend services, caching, slash command, RHS
 
 4. **Analytics**
    - 90-day data retention
+   - Stored in AIAnalytics table with daily aggregations
    - Aggregate-only (no individual message storage)
    - Privacy-conscious design
+   - Background job for daily aggregation
 
 ### Scope Refinements Made
 - ❌ **Removed**: Smart Notifications (too complex, high API costs)
@@ -75,29 +81,44 @@ Summaries are now live end-to-end (backend services, caching, slash command, RHS
 
 ## Current State
 - ✅ Mattermost running locally on user's machine
-- ✅ PRD finalized (1,453 lines, comprehensive)
-- ✅ Task list created (86 tasks, 7 PRs)
-- ✅ Architecture designed
-- ✅ API specifications defined
-- ✅ Plugin scaffold builds (`make bundle`) when run with `GOWORK=off` and npm legacy peer deps
-- ✅ GPT-4 OpenAI client, KV store service, REST API router, and base webapp infrastructure implemented (PR #2)
-- ✅ Summarization backend + RHS UI shipped (PR #3)
+- ✅ PRD finalized and updated for native integration
+- ✅ Task list created (87 tasks, 7 PRs) - updated for core integration
+- ✅ Architecture redesigned for native feature approach
+- ✅ API specifications defined (`/api/v4/ai/*` endpoints)
+- ✅ Database schema designed (4 new tables with migrations)
+- ✅ Memory bank updated to reflect brownfield development
 
-## Plugin Architecture Decisions
-- **Backend Services**: Summarizer, Analytics, ActionItems, Formatter
-- **Core Services**: OpenAI Client, Message Processor, Store wrapper
-- **Plugin Hooks**: MessageHasBeenPosted (analytics + action items), MessageWillBePosted (formatting)
-- **API Endpoints**: 8 REST endpoints defined
+## Native Integration Architecture
+- **Backend Layers**:
+  - `app/ai_*.go` - Business logic services (Summarizer, Analytics, ActionItems, Formatter)
+  - `api4/ai_*.go` - REST API handlers
+  - `store/sqlstore/ai_*.go` - Database operations
+  - `jobs/ai_*.go` - Background jobs (reminders, aggregation)
+  - `app/openai/` - OpenAI client package
+- **Frontend Layers**:
+  - `components/ai/` - React UI components
+  - `actions/ai_*.ts` - Redux actions
+  - `reducers/ai/` - Redux state management
+  - `selectors/ai_*.ts` - Data selectors
+- **Integration Points**:
+  - Post hooks in `app/post.go`
+  - AI routes in `api4/ai.go`
+  - Redux store integration
+  - Slash commands in `app/slashcommands/`
+- **API Endpoints**: 8+ REST endpoints under `/api/v4/ai/*`
 - **Slash Commands**: 4 commands (/summarize, /actionitems, /analytics, /format)
 
 ## Known Considerations
 1. **OpenAI API Costs**: GPT-3.5-turbo recommended as default (10x cheaper than GPT-4)
-2. **Rate Limiting**: 60 calls/minute default, configurable
-3. **Caching Strategy**: 24-hour summary cache to reduce API costs
+2. **Rate Limiting**: 60 calls/minute default, configurable in AISettings
+3. **Caching Strategy**: 24-hour summary cache in AISummaries table to reduce API costs
 4. **Performance**: Target <5 seconds for summarization, <1 second for analytics
-5. **Permissions**: All features respect Mattermost's channel membership permissions
-6. **Build Tooling**: When compiling from `server/plugins/ai-suite`, set `GOWORK=off` (workspace otherwise points to monorepo root). Webapp npm install currently requires `--legacy-peer-deps` due to `@mattermost/types` optional TypeScript 4.x peer.
-7. **Plugin Deployment**: `make deploy` installs into `server/plugins/com.mattermost.ai-suite`; ensure that folder contains `server/dist` + `webapp/dist` and remove stray duplicate plugin directories (Mattermost logs “multiple plugins found” if both `ai-suite` and `com.mattermost.ai-suite` exist).
+5. **Permissions**: All features respect Mattermost's native channel membership permissions
+6. **Database Migrations**: Must create and test migrations for 4 new AI tables
+7. **Build System**: Standard Mattermost build process (no special flags required)
+8. **Configuration**: New AISettings section in config.json for feature toggles and API key
+9. **Background Jobs**: Scheduler for reminders and analytics aggregation
+10. **Brownfield Development**: Working within existing Mattermost patterns and conventions
 
 ## Development Workflow
 ```

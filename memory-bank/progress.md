@@ -16,50 +16,61 @@
 - Active context defined
 - Windows setup guides created
 
-✅ **Plugin Planning Complete**
-- Product Requirements Document (PRD) finalized
-- Task breakdown completed (86 tasks, 7 PRs)
+✅ **AI Feature Planning Complete**
+- Product Requirements Document (PRD) finalized (native integration)
+- Task breakdown completed (87 tasks, 7 PRs)
 - Feature specifications defined
-- API contracts documented
-- Architecture designed
+- API contracts documented (`/api/v4/ai/*`)
+- Architecture redesigned for core integration
+- Database schema designed (4 new tables)
 
 ## What We're Building
 
-### Mattermost AI Productivity Suite Plugin
+### Mattermost AI Productivity Suite (Native Features)
+
+**Development Approach**: Brownfield Development - Integrating AI features directly into Mattermost core
 
 **4 Core Features:**
 
-1. **AI Message Summarization** ✅
+1. **AI Message Summarization** ⏳
    - Thread and channel summarization
    - Configurable message limits (default: 500)
-   - 24-hour caching
-   - RHS panel display
+   - 24-hour caching in AISummaries table
+   - RHS panel display (Redux integrated)
    - `/summarize` slash command
+   - REST API: `/api/v4/ai/summarize`
 
 2. **Channel Analytics Dashboard** ⏳
-   - Message volume charts
+   - Message volume charts (Recharts)
    - Top contributors visualization
    - Activity heatmaps
    - Response time metrics
    - CSV export capability
+   - Daily aggregation background job
+   - AIAnalytics table storage
+   - REST API: `/api/v4/ai/analytics/{channelId}`
 
 3. **Action Item Extractor** ⏳
    - AI-powered commitment detection
    - Personal action items dashboard
    - Team view for managers
-   - Automated reminders
+   - Automated reminders (background job)
    - `/actionitems` slash command
+   - AIActionItems table storage
+   - REST API: `/api/v4/ai/actionitems`
 
 4. **Message Formatting Assistant** ⏳
    - Grammar and spelling fixes
    - Professional tone enhancement
    - List/structure formatting
-   - Real-time preview
+   - Real-time preview modal
    - Multiple formatting profiles
+   - Composer integration
+   - REST API: `/api/v4/ai/format`
 
 ## Current Development Phase
-**Phase**: Plugin Development – Execution
-**State**: PR #3 (Summarization) complete; preparing PR #4 (Action Items)
+**Phase**: Architecture Redesign Complete
+**State**: Shifted from plugin to native feature integration (brownfield development)
 
 ### Completed Planning Tasks
 - [x] Mattermost local environment running
@@ -71,88 +82,89 @@
   - Removed Scheduled Messages (already exists)
   - Added Action Item Extractor
   - Added Message Formatting Assistant
-- [x] PRD finalized (1,453 lines)
-- [x] Task list created (86 tasks)
-- [x] Message limit defaults configured
-- [x] Memory Bank updated
-- [x] Task list PR ordering aligned with scoped features (Action Items → Formatter → Analytics)
-- [x] PRD reflects final four-feature scope (scheduled messages removed, action items/formatter documented)
+- [x] **Architecture Decision**: Changed from plugin to native integration
+- [x] PRD updated for native integration (database tables, api4, Redux)
+- [x] Task list rewritten (87 tasks, 7 PRs) for core integration
+- [x] Database schema designed (4 new AI tables with migrations)
+- [x] API endpoints redesigned (`/api/v4/ai/*`)
+- [x] Memory Bank fully updated
 
-### Completed Development Milestones
-- [x] **PR #1: Project Initialization & Plugin Scaffold**
-  - Created plugin manifest, Go module, Makefile, README/docs
-  - Implemented server entrypoint/configuration and webapp bootstrap
-  - Verified `make bundle` path with `GOWORK=off` + npm legacy peer deps workaround
-- [x] **PR #2: OpenAI Integration & Core Services**
-  - Added GPT-4 OpenAI client, prompt templates, config-controlled API key/model settings, KV store abstraction, REST API router/middleware, base webapp API client + common UI components
-  - Documented admin-only key configuration and ensured plugin tests run with `GOWORK=off go test ./...`
-- [x] **PR #3: AI Message Summarization**
-  - Implemented summarizer service + cache, `/summarize` slash command and REST endpoint, thread/channel retrieval, RHS React components with copy/share/regenerate controls, and deployment notes (GOWORK=off + `npm install --legacy-peer-deps`)
+### Development Approach
+- **Type**: Brownfield Development (extending existing codebase)
+- **Backend**: Integrating into `server/channels/` (api4, app, store, jobs)
+- **Frontend**: Integrating into `webapp/channels/src/` (components, actions, reducers)
+- **Database**: Creating new tables with proper migrations
+- **Benefits**: Demonstrates working with existing large-scale codebase
 
-### Ready to Start
-- [x] PR #3: AI Message Summarization (12 tasks)
-- [ ] PR #4: Action Item Extractor (14 tasks)
-- [ ] PR #5: Message Formatting Assistant (13 tasks)
-- [ ] PR #6: Channel Analytics Dashboard (16 tasks)
-- [ ] PR #7: Testing, Documentation & Polish (14 tasks)
+### Ready to Start (Native Integration)
+- [ ] PR #1: Core Infrastructure (database, store, OpenAI client)
+- [ ] PR #2: AI API Foundation (routes, prompts, Redux)
+- [ ] PR #3: AI Message Summarization
+- [ ] PR #4: Action Item Extractor
+- [ ] PR #5: Message Formatting Assistant
+- [ ] PR #6: Channel Analytics Dashboard
+- [ ] PR #7: Testing, Documentation & Polish
 
 ## Known Issues
-None identified yet. Build notes: set `GOWORK=off` when compiling the plugin module and run `npm install --legacy-peer-deps` inside `server/plugins/ai-suite/webapp` until TypeScript peer constraints are relaxed.
+None identified yet. Standard Mattermost build process applies (no special flags required).
 
-## Plugin Development Roadmap
+## Native Integration Development Roadmap
 
-### PR #1: Project Initialization (Days 1-2)
-- Initialize plugin repository structure
-- Create plugin.json manifest
-- Set up Go module and dependencies
-- Configure build system (Makefile)
-- Create basic server plugin entry point
-- Initialize webapp with webpack
-- **Goal**: Working "Hello World" plugin
+### PR #1: Core Infrastructure (Days 1-2)
+- Database migrations for 4 AI tables
+- Store layer implementation (CRUD operations)
+- OpenAI client package in app layer
+- Configuration schema (AISettings)
+- Base service initialization
+- **Goal**: Foundation ready for features
 
-### PR #2: OpenAI Integration (Day 3)
-- ✅ OpenAI client wrapper
-- ✅ Prompt template system
-- ✅ KV store implementation
-- ✅ REST API foundation
-- ✅ Base webapp API client + common UI components
-- **Goal**: OpenAI integration working ✅
+### PR #2: API Foundation (Day 2-3)
+- AI route registration in api4
+- Prompt template system
+- Redux store setup (reducers, actions, selectors)
+- Client4 AI methods
+- Base AI components
+- **Goal**: API and frontend infrastructure ready
 
-### PR #3: Summarization (Day 4)
-- Message fetching and formatting
-- Thread/channel summarization
-- Summary caching
-- RHS panel UI
-- Slash command
+### PR #3: Summarization (Day 3-4)
+- Summarizer service in app layer
+- Summary caching in database
+- API endpoints (`/api/v4/ai/summarize`)
+- Slash command (`/summarize`)
+- RHS panel UI (Redux integrated)
 - **Goal**: End-to-end summarization working
 
-### PR #4: Action Items (Day 5)
-- AI-powered detection engine
-- Personal dashboard
-- Reminder system
+### PR #4: Action Items (Day 4-5)
+- AI detection service
+- AIActionItems CRUD operations
+- Background reminder job
+- Personal dashboard UI
 - Team view
 - **Goal**: Action item tracking functional
 
 ### PR #5: Formatter (Day 5-6)
-- Formatting engine with profiles
-- Preview modal
-- Message composer integration
-- Grammar checking
+- Formatting service with profiles
+- API endpoints (`/api/v4/ai/format`)
+- Preview modal component
+- Composer integration
+- User preferences storage
 - **Goal**: Message formatting working
 
 ### PR #6: Analytics (Day 6)
-- Data collection hooks
-- Metrics aggregation
+- Analytics aggregation job
+- Metrics calculation service
+- API endpoints (`/api/v4/ai/analytics`)
 - Dashboard UI with charts
 - CSV export
 - **Goal**: Analytics dashboard complete
 
 ### PR #7: Polish (Day 7)
-- Unit tests
-- Documentation
-- Bug fixes
-- Demo video
-- **Goal**: Production-ready plugin
+- Backend unit tests
+- Frontend component tests
+- API integration tests
+- Documentation updates
+- Code review and cleanup
+- **Goal**: Production-ready features
 
 ## Technical Targets
 
@@ -169,9 +181,14 @@ None identified yet. Build notes: set `GOWORK=off` when compiling the plugin mod
 - Complete API documentation
 
 ## Next Milestone
-**Milestone 1**: Plugin Scaffold Complete
-- Plugin compiles and installs on Mattermost
-- Appears in System Console
-- Basic configuration working
+**Milestone 1**: Core Infrastructure Complete
+- Database migrations tested
+- Store layer functional
+- OpenAI client ready
+- Configuration schema integrated
+- Build process verified
 - **Target**: End of Day 2
+
+## Key Differentiator
+This project demonstrates **brownfield development** - the ability to understand, navigate, and extend a large existing codebase (Mattermost) following established patterns and conventions, rather than building a greenfield project from scratch.
 

@@ -52,7 +52,7 @@ Modern teams using Mattermost face several challenges:
 
 ### 1.3 Solution
 
-The Mattermost AI Productivity Suite addresses these challenges through four integrated features:
+The Mattermost AI Productivity Suite addresses these challenges through four integrated **native features** added directly to the Mattermost core:
 
 1. **AI Message Summarization** - Intelligent summaries of threads and channels
 2. **Channel Analytics Dashboard** - Visual insights into communication patterns
@@ -78,18 +78,18 @@ The Mattermost AI Productivity Suite addresses these challenges through four int
 
 ### 2.2 Project Type
 
-Mattermost Plugin (Server + Web App components)
+Native Mattermost Feature Integration (Server Backend + Web App Frontend)
 
 ### 2.3 Technology Stack
 
 | Component | Technology |
 |-----------|------------|
-| Backend | Go (Golang) |
-| Frontend | React, TypeScript |
-| Database | PostgreSQL (Mattermost's existing DB) |
+| Backend | Go (Golang) - Mattermost Core App Layer |
+| Frontend | React, TypeScript, Redux - Mattermost Channels Webapp |
+| Database | PostgreSQL (Mattermost's existing DB with new tables) |
 | AI/LLM | OpenAI GPT-4 API |
-| Build System | Make, Webpack |
-| Plugin Framework | Mattermost Plugin SDK |
+| Build System | Make, Webpack, Go Modules |
+| Framework | Native Mattermost Core (api4, app, store layers) |
 
 ### 2.4 Repository Structure
 
@@ -98,23 +98,29 @@ mattermost/
 ├── server/                 # Go backend (cmd, channels, enterprise, plugins, etc.)
 │   ├── cmd/                # Binary entrypoints (`mattermost`, `platform`, tooling)
 │   ├── channels/           # Core server app (api4, app, store, jobs, wsapi, web)
-│   ├── plugins/            # Packaged plugins + local dev artifacts
+│   │   ├── api4/           # REST API endpoints → AI endpoints here
+│   │   ├── app/            # Business logic → AI services here
+│   │   ├── store/          # Database layer → AI data models here
+│   │   └── jobs/           # Background workers → AI reminders here
 │   ├── config/, data/, logs/ # Default configs, sample data, local runtime output
 │   └── scripts/, tests/, public/ # Build helpers, QA tooling, static assets
 ├── webapp/                 # React/TypeScript clients
-│   ├── channels/           # Primary Mattermost web client (src/, build/, dist/)
-│   ├── platform/           # Shared platform components
-│   ├── scripts/            # Frontend build/test helpers
-│   └── patches/            # Yarn/NPM patch files
+│   ├── channels/           # Primary Mattermost web client
+│   │   └── src/            # Frontend source code
+│   │       ├── actions/    # Redux actions → AI actions here
+│   │       ├── components/ # React components → AI UI here
+│   │       ├── reducers/   # Redux reducers → AI state here
+│   │       ├── selectors/  # Redux selectors → AI selectors here
+│   │       └── utils/      # Utilities → AI helpers here
+│   ├── platform/           # Shared platform packages
+│   └── scripts/            # Frontend build helpers
 ├── api/                    # REST/v4 API reference & OpenAPI specs
 ├── e2e-tests/              # Cypress/Playwright automation suites
-├── tools/                  # Build, localization, packaging utilities
-├── .github/                # Actions workflows, issue templates
 ├── memory-bank/            # Project knowledge base for this effort
 └── Root docs & configs     # PRD, task list, README, licenses, etc.
 ```
 
-This is the upstream Mattermost monorepo; our AI Productivity Suite plugin will live inside `server/plugins` (Go backend) and `webapp` (React client) while still following the Mattermost plugin conventions outlined elsewhere in this PRD.
+This is the upstream Mattermost monorepo; our AI Productivity Suite features will be integrated directly into the core codebase (`server/channels` for backend, `webapp/channels/src` for frontend) as native Mattermost functionality.
 
 ### 2.5 Forked Repository
 
@@ -138,17 +144,18 @@ This is the upstream Mattermost monorepo; our AI Productivity Suite plugin will 
 ### 3.2 Secondary Goals
 
 - Demonstrate proficiency in Go and React development
-- Learn Mattermost plugin architecture
+- Learn Mattermost core architecture (api4, app, store, Redux)
+- **Practice brownfield development** - extending an existing large codebase
 - Build production-ready, deployable software
 - Create comprehensive documentation
 
 ### 3.3 Non-Goals (Out of Scope)
 
 - Mobile app modifications
-- Mattermost core server changes
 - Multi-LLM support (OpenAI only for v1.0)
 - Real-time collaborative features
 - Integration with external task management tools
+- Plugin-based architecture (we're building native features)
 
 ---
 
@@ -826,41 +833,45 @@ information and meaning. Remove unnecessary words and redundancy.
 │                         Mattermost Server                            │
 │                                                                      │
 │  ┌────────────────────────────────────────────────────────────────┐ │
-│  │                    AI Productivity Suite Plugin                 │ │
+│  │              server/channels/ (Core Application)                │ │
 │  │                                                                 │ │
-│  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────┐│ │
-│  │  │ Summarizer  │ │  Analytics  │ │ Action Item │ │ Formatter ││ │
-│  │  │   Service   │ │  Collector  │ │  Extractor  │ │  Service  ││ │
-│  │  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘ └─────┬─────┘│ │
-│  │         │               │               │              │       │ │
-│  │  ┌──────┴───────────────┴───────────────┴──────────────┴─────┐│ │
-│  │  │                    Core Services Layer                     ││ │
-│  │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐ ││ │
-│  │  │  │  OpenAI      │  │   Message    │  │   Notification   │ ││ │
-│  │  │  │  Client      │  │   Processor  │  │   Manager        │ ││ │
-│  │  │  └──────────────┘  └──────────────┘  └──────────────────┘ ││ │
-│  │  └───────────────────────────────────────────────────────────┘│ │
-│  │                              │                                 │ │
-│  │  ┌───────────────────────────┴───────────────────────────────┐│ │
-│  │  │                    Data Access Layer                       ││ │
-│  │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐││ │
-│  │  │  │   Plugin    │  │  Mattermost │  │   Key-Value Store   │││ │
-│  │  │  │   Store     │  │    API      │  │   (Plugin KV)       │││ │
-│  │  │  └─────────────┘  └─────────────┘  └─────────────────────┘││ │
-│  │  └───────────────────────────────────────────────────────────┘│ │
-│  │                                                                │ │
-│  │  ┌───────────────────────────────────────────────────────────┐│ │
-│  │  │                    REST API Endpoints                      ││ │
-│  │  │  POST /summarize  |  GET /analytics  |  POST /format     ││ │
-│  │  │  GET /actionitems  |  PUT /actionitem  |  POST /complete ││ │
-│  │  └───────────────────────────────────────────────────────────┘│ │
-│  └────────────────────────────────────────────────────────────────┘ │
+│  │  ┌───────────────────────────────────────────────────────────┐ │ │
+│  │  │                    api4/ (REST API Layer)                  │ │ │
+│  │  │  POST /api/v4/ai/summarize  |  GET /api/v4/ai/analytics  │ │ │
+│  │  │  POST /api/v4/ai/format  |  GET /api/v4/ai/actionitems   │ │ │
+│  │  └────────────────────────────┬──────────────────────────────┘ │ │
+│  │                               │                                 │ │
+│  │  ┌────────────────────────────┴──────────────────────────────┐ │ │
+│  │  │                 app/ (Business Logic Layer)                │ │ │
+│  │  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌──────┐│ │ │
+│  │  │  │ Summarizer  │ │  Analytics  │ │ Action Item │ │Format││ │ │
+│  │  │  │   Service   │ │  Collector  │ │  Extractor  │ │ Svc  ││ │ │
+│  │  │  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘ └───┬──┘│ │ │
+│  │  │         │               │               │             │    │ │ │
+│  │  │  ┌──────┴───────────────┴───────────────┴─────────────┴──┐│ │ │
+│  │  │  │              Shared AI Services Layer                 ││ │ │
+│  │  │  │  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐││ │ │
+│  │  │  │  │  OpenAI      │  │   Message    │  │ Notification│││ │ │
+│  │  │  │  │  Client      │  │   Processor  │  │  Manager    │││ │ │
+│  │  │  │  └──────────────┘  └──────────────┘  └─────────────┘││ │ │
+│  │  │  └───────────────────────────────────────────────────────┘│ │ │
+│  │  └────────────────────────────┬──────────────────────────────┘ │ │
+│  │                               │                                 │ │
+│  │  ┌────────────────────────────┴──────────────────────────────┐ │ │
+│  │  │               store/ (Data Access Layer)                   │ │ │
+│  │  │  ┌───────────────┐  ┌──────────────┐  ┌────────────────┐ │ │ │
+│  │  │  │  AI Summaries │  │ Action Items │  │  AI Analytics  │ │ │ │
+│  │  │  │  Store        │  │  Store       │  │  Store         │ │ │ │
+│  │  │  └───────────────┘  └──────────────┘  └────────────────┘ │ │ │
+│  │  └───────────────────────────────────────────────────────────┘ │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
 │                                                                      │
 ├──────────────────────────────────────────────────────────────────────┤
 │                         PostgreSQL Database                          │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────────┐│
-│  │   Posts    │ │  Channels  │ │   Users    │ │  PluginKeyValue    ││
-│  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘│
+│  ┌────────────┐ ┌────────────┐ ┌───────────────┐ ┌───────────────┐ │
+│  │   Posts    │ │  Channels  │ │ AISummaries   │ │ AIActionItems ││
+│  │   Users    │ │ Reactions  │ │ AIAnalytics   │ │ AIPreferences ││
+│  └────────────┘ └────────────┘ └───────────────┘ └───────────────┘ │
 └──────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
@@ -868,29 +879,64 @@ information and meaning. Remove unnecessary words and redundancy.
                          │    OpenAI API       │
                          │  (GPT-4 / GPT-3.5)  │
                          └─────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                    webapp/channels/ (Frontend)                       │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    src/components/ (UI Layer)                   │ │
+│  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────┐│ │
+│  │  │  Summary    │ │  Analytics  │ │ Action Item │ │ Formatter ││ │
+│  │  │  Panel      │ │  Dashboard  │ │  Dashboard  │ │  UI       ││ │
+│  │  └─────────────┘ └─────────────┘ └─────────────┘ └───────────┘│ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │              src/actions/ (Redux Action Creators)               │ │
+│  │  summarizeThread() | getAnalytics() | createActionItem()       │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │            src/reducers/ (Redux State Management)               │ │
+│  │  aiSummaries | aiAnalytics | aiActionItems | aiFormatter       │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │               src/selectors/ (Data Selectors)                   │ │
+│  │  getAISummary() | getActionItems() | getChannelAnalytics()     │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 6.2 Component Descriptions
 
-| Component | Responsibility |
-|-----------|----------------|
-| Summarizer Service | Handles message retrieval, formatting, OpenAI calls, and summary generation |
-| Analytics Collector | Aggregates message data, calculates metrics, prepares visualization data |
-| Action Item Extractor | Detects commitments and tasks in conversations, manages action item tracking |
-| Formatter Service | Improves message quality through AI-powered formatting and grammar checking |
-| OpenAI Client | Wrapper for OpenAI API with rate limiting, retries, and error handling |
-| Message Processor | Common utilities for message formatting, filtering, and parsing |
-| Plugin Store | Persistent storage for plugin-specific data (action items, preferences, cache) |
+**Backend (server/channels/)**
 
-### 6.3 Plugin Hooks Used
+| Component | Layer | Responsibility |
+|-----------|-------|----------------|
+| API Handlers (`api4/ai_*.go`) | REST API | HTTP request handling, validation, permissions, response formatting |
+| Summarizer Service (`app/ai_summarizer.go`) | Business Logic | Message retrieval, formatting, OpenAI calls, summary generation |
+| Analytics Collector (`app/ai_analytics.go`) | Business Logic | Aggregates message data, calculates metrics, prepares visualization data |
+| Action Item Extractor (`app/ai_action_items.go`) | Business Logic | Detects commitments and tasks, manages action item lifecycle |
+| Formatter Service (`app/ai_formatter.go`) | Business Logic | AI-powered formatting and grammar checking |
+| OpenAI Client (`app/openai_client.go`) | Shared Service | Wrapper for OpenAI API with rate limiting, retries, error handling |
+| AI Stores (`store/sqlstore/ai_*.go`) | Data Layer | Database operations for summaries, action items, analytics, preferences |
 
-| Hook | Purpose |
-|------|---------|
-| `MessageHasBeenPosted` | Trigger analytics data collection and action item extraction |
-| `MessageWillBePosted` | Apply formatting assistance if user requested |
-| `OnActivate` | Initialize services, load action items |
-| `OnDeactivate` | Cleanup, persist state |
-| `ServeHTTP` | Handle custom REST API endpoints |
+**Frontend (webapp/channels/src/)**
+
+| Component | Layer | Responsibility |
+|-----------|-------|----------------|
+| AI Components (`components/ai/`) | UI | React components for summaries, analytics, action items, formatting |
+| AI Actions (`actions/ai_*.ts`) | Redux Actions | Action creators for API calls and state updates |
+| AI Reducers (`reducers/ai_*.ts`) | Redux State | State management for AI features |
+| AI Selectors (`selectors/ai_*.ts`) | Redux Selectors | Memoized data selectors and computed state |
+
+### 6.3 Integration Points
+
+| Integration Point | Purpose |
+|-------------------|---------|
+| `app.MessageHasBeenPosted()` | Trigger analytics data collection and action item extraction |
+| `app.MessageWillBePosted()` | Apply formatting assistance if user requested |
+| `app.InitializeAIServices()` | Initialize AI services at server startup |
+| `api4.InitAI()` | Register AI REST API endpoints |
+| Redux Store Integration | Wire AI reducers and middleware into main store |
 
 ### 6.4 Data Flow Diagrams
 
@@ -999,92 +1045,126 @@ Under plugin section:
 
 ## 8. Data Model
 
-### 8.1 Plugin Key-Value Store Schema
+### 8.1 Database Schema
 
-**Action Items:**
-```
-Key: "actionitem:{action_item_id}"
-Value: {
-  id: string
-  description: string
-  assignee_id: string
-  creator_id: string
-  channel_id: string
-  message_id: string  // Link to original message
-  thread_id: string (optional)
-  deadline: timestamp (optional)
-  created_at: timestamp
-  completed_at: timestamp (optional)
-  status: "active" | "completed" | "dismissed"
-  priority: "high" | "medium" | "low"
-  reminder_sent: boolean
-}
-```
-
-**User Preferences:**
-```
-Key: "preferences:{user_id}"
-Value: {
-  summary_length: "brief" | "standard" | "detailed"
-  action_item_reminders: boolean
-  reminder_time: string  // e.g., "09:00"
-  formatting_auto_suggest: boolean
-  formatting_default_profile: "professional" | "casual" | "technical" | "concise"
-  formatting_show_preview: boolean
-}
+**AIActionItems Table:**
+```sql
+CREATE TABLE AIActionItems (
+  Id VARCHAR(26) PRIMARY KEY,
+  Description TEXT NOT NULL,
+  AssigneeId VARCHAR(26) NOT NULL,
+  CreatorId VARCHAR(26) NOT NULL,
+  ChannelId VARCHAR(26) NOT NULL,
+  PostId VARCHAR(26),  -- Link to original message
+  ThreadId VARCHAR(26),
+  Deadline BIGINT,  -- Unix timestamp in milliseconds
+  CreatedAt BIGINT NOT NULL,
+  CompletedAt BIGINT,
+  Status VARCHAR(32) NOT NULL,  -- 'active', 'completed', 'dismissed'
+  Priority VARCHAR(32),  -- 'high', 'medium', 'low'
+  ReminderSent BOOLEAN DEFAULT FALSE,
+  DeleteAt BIGINT DEFAULT 0,
+  
+  INDEX idx_assignee (AssigneeId, Status, DeleteAt),
+  INDEX idx_channel (ChannelId, Status, DeleteAt),
+  INDEX idx_deadline (Deadline, Status, DeleteAt),
+  FOREIGN KEY (AssigneeId) REFERENCES Users(Id),
+  FOREIGN KEY (CreatorId) REFERENCES Users(Id),
+  FOREIGN KEY (ChannelId) REFERENCES Channels(Id),
+  FOREIGN KEY (PostId) REFERENCES Posts(Id)
+);
 ```
 
-**Plugin Configuration (System Settings):**
+**AISummaries Table (Cache):**
+```sql
+CREATE TABLE AISummaries (
+  Id VARCHAR(26) PRIMARY KEY,
+  ChannelId VARCHAR(26),
+  ThreadId VARCHAR(26),
+  Summary TEXT NOT NULL,
+  KeyPoints TEXT,  -- JSON array
+  Decisions TEXT,  -- JSON array
+  MessageCount INT,
+  ParticipantCount INT,
+  StartTime BIGINT,
+  EndTime BIGINT,
+  CreatedAt BIGINT NOT NULL,
+  ExpiresAt BIGINT NOT NULL,
+  
+  INDEX idx_channel_time (ChannelId, StartTime, EndTime),
+  INDEX idx_thread (ThreadId),
+  INDEX idx_expires (ExpiresAt)
+);
 ```
+
+**AIAnalytics Table:**
+```sql
+CREATE TABLE AIAnalytics (
+  Id VARCHAR(26) PRIMARY KEY,
+  ChannelId VARCHAR(26) NOT NULL,
+  Date VARCHAR(10) NOT NULL,  -- YYYY-MM-DD
+  MessageCount INT DEFAULT 0,
+  UniqueUsers INT DEFAULT 0,
+  ThreadCount INT DEFAULT 0,
+  ReactionCount INT DEFAULT 0,
+  FileCount INT DEFAULT 0,
+  HourlyDistribution TEXT,  -- JSON array of 24 integers
+  TopContributors TEXT,  -- JSON array of {userId, count}
+  AvgResponseTimeMs BIGINT,
+  CreatedAt BIGINT NOT NULL,
+  UpdatedAt BIGINT NOT NULL,
+  
+  UNIQUE INDEX idx_channel_date (ChannelId, Date),
+  INDEX idx_date (Date)
+);
+```
+
+**AIPreferences Table:**
+```sql
+CREATE TABLE AIPreferences (
+  UserId VARCHAR(26) PRIMARY KEY,
+  SummaryLength VARCHAR(32) DEFAULT 'standard',  -- 'brief', 'standard', 'detailed'
+  ActionItemReminders BOOLEAN DEFAULT TRUE,
+  ReminderTime VARCHAR(5) DEFAULT '09:00',
+  FormattingAutoSuggest BOOLEAN DEFAULT TRUE,
+  FormattingDefaultProfile VARCHAR(32) DEFAULT 'professional',
+  FormattingShowPreview BOOLEAN DEFAULT TRUE,
+  CreatedAt BIGINT NOT NULL,
+  UpdatedAt BIGINT NOT NULL,
+  
+  FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+```
+
+**System Configuration (config.json):**
+```json
 {
-  openai_api_key: string (encrypted)
-  openai_model: "gpt-4" | "gpt-3.5-turbo"
-  max_message_limit: number (default: 500)
-  api_rate_limit: number (default: 60)
-  enable_summarization: boolean (default: true)
-  enable_analytics: boolean (default: true)
-  enable_action_items: boolean (default: true)
-  enable_formatting: boolean (default: true)
-  action_item_detection_channels: string[] (default: all channels)
-  formatting_available_to_all: boolean (default: true)
+  "AISettings": {
+    "Enable": true,
+    "OpenAIAPIKey": "encrypted_key",
+    "OpenAIModel": "gpt-4",
+    "MaxMessageLimit": 500,
+    "APIRateLimit": 60,
+    "EnableSummarization": true,
+    "EnableAnalytics": true,
+    "EnableActionItems": true,
+    "EnableFormatting": true,
+    "ActionItemDetectionChannels": [],
+    "FormattingAvailableToAll": true
+  }
 }
 ```
 
-**Summary Cache:**
-```
-Key: "summary:{channel_id}:{date_range_hash}"
-Value: {
-  summary: string
-  generated_at: timestamp
-  message_count: number
-  expires_at: timestamp
-}
-```
+### 8.2 Query Patterns
 
-**Analytics Aggregates:**
-```
-Key: "analytics:{channel_id}:{date}"
-Value: {
-  message_count: number
-  unique_users: number
-  thread_count: number
-  reaction_count: number
-  file_count: number
-  hourly_distribution: number[24]
-  top_contributors: {user_id: string, count: number}[]
-  avg_response_time_ms: number
-}
-```
-
-### 8.2 Indexes and Queries
-
-| Query | Access Pattern |
-|-------|----------------|
-| Get user's action items | Scan keys matching `actionitem:*` filtered by assignee_id |
-| Get channel action items | Scan keys matching `actionitem:*` filtered by channel_id |
-| Get channel analytics for date range | Fetch `analytics:{channel_id}:{date}` for each date |
-| Check summary cache | Direct key lookup with hash of parameters |
-| Get user preferences | Direct key lookup `preferences:{user_id}` |
+| Query | SQL / Access Pattern |
+|-------|----------------------|
+| Get user's action items | `SELECT * FROM AIActionItems WHERE AssigneeId = ? AND Status = ? AND DeleteAt = 0 ORDER BY Deadline` |
+| Get channel action items | `SELECT * FROM AIActionItems WHERE ChannelId = ? AND Status = ? AND DeleteAt = 0` |
+| Get channel analytics for date range | `SELECT * FROM AIAnalytics WHERE ChannelId = ? AND Date >= ? AND Date <= ?` |
+| Check summary cache | `SELECT * FROM AISummaries WHERE ChannelId = ? AND StartTime = ? AND EndTime = ? AND ExpiresAt > ?` |
+| Get user preferences | `SELECT * FROM AIPreferences WHERE UserId = ?` |
+| Get overdue action items | `SELECT * FROM AIActionItems WHERE Deadline < ? AND Status = 'active' AND DeleteAt = 0` |
 
 ---
 
@@ -1092,7 +1172,9 @@ Value: {
 
 ### 9.1 REST Endpoints
 
-#### POST /plugins/ai-suite/api/v1/summarize
+All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/` namespace.
+
+#### POST /api/v4/ai/summarize
 
 **Request:**
 ```json
@@ -1122,7 +1204,7 @@ Value: {
 }
 ```
 
-#### GET /plugins/ai-suite/api/v1/analytics/{channel_id}
+#### GET /api/v4/ai/analytics/{channel_id}
 
 **Query Parameters:**
 - `start_date`: ISO8601 date
@@ -1158,7 +1240,7 @@ Value: {
 }
 ```
 
-#### POST /plugins/ai-suite/api/v1/actionitems
+#### POST /api/v4/ai/actionitems
 
 **Request:**
 ```json
@@ -1184,7 +1266,7 @@ Value: {
 }
 ```
 
-#### GET /plugins/ai-suite/api/v1/actionitems
+#### GET /api/v4/ai/actionitems
 
 **Query Parameters:**
 - `channel_id`: filter to a single channel (optional)
@@ -1209,7 +1291,7 @@ Value: {
 }
 ```
 
-#### PUT /plugins/ai-suite/api/v1/actionitems/{action_item_id}
+#### PUT /api/v4/ai/actionitems/{action_item_id}
 
 **Request:**
 ```json
@@ -1336,11 +1418,11 @@ Value: {
 
 ### 12.2 Mattermost Version Compatibility
 
-| Mattermost Version | Plugin Compatibility |
-|--------------------|---------------------|
-| 9.0+ | Full support |
-| 8.x | Limited (no RHS updates) |
-| 7.x | Not supported |
+| Mattermost Version | Feature Compatibility |
+|--------------------|----------------------|
+| 9.11+ (our fork) | Full support |
+| 9.0-9.10 | May require minor adjustments |
+| 8.x and below | Not compatible (requires core changes) |
 
 ### 12.3 Third-Party Libraries
 
