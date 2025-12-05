@@ -72,21 +72,33 @@ Return your response as a JSON object with the following structure:
   "has_action_items": true/false,
   "action_items": [
     {
-      "description": "What needs to be done",
+      "description": "DETAILED description of what needs to be done - include the subject/object from the original message (e.g., 'Send the list of hiring partner companies' NOT just 'Send it')",
       "assignee": "Who will do it (username or 'unspecified')",
-      "deadline": "When it's due (ISO format or 'unspecified')",
-      "priority": "low/medium/high"
+      "deadline": "When it's due - use natural language like 'end of this week', 'tomorrow', 'by EOD', 'Friday', or ISO format. If mentioned in the message, extract it.",
+      "priority": "low/medium/high based on urgency words and deadline"
     }
   ]
 }
 
-Only identify clear, actionable commitments. Ignore vague statements like "we should think about" unless they include specific plans.`,
+IMPORTANT RULES:
+1. Extract FULL context in descriptions - never use generic terms like "it", "this", "that"
+2. Include the specific object/subject from the message (e.g., "review", "report", "document name")
+3. If a deadline is mentioned (EOD, end of week, tomorrow, Friday, etc.), extract it exactly as written
+4. Priority should be HIGH if urgent words or near deadlines are used
+5. Only identify clear, actionable commitments
+
+Examples:
+- Message: "I'll send it by EOD" → description: "Send [the previously mentioned item]" (try to infer from context)
+- Message: "Can you send me the list of hiring partner companies by EOD?" → description: "Send the list of hiring partner companies"
+- Message: "Sure. Will send it by EOD." → description: "Send it" (only if context cannot be inferred)`,
 	User: `Analyze this message for action items:
 
 Author: {{author}}
 Channel: {{channel_name}}
 Message:
 {{message}}
+
+Extract action items with DETAILED descriptions that include the full context from the message. If the message references something from earlier in the conversation, try to include that context in the description.
 
 Return a JSON response identifying any action items or commitments.`,
 }

@@ -847,6 +847,12 @@ func (s *Server) Start() error {
 		mlog.Error("Failed to reload config on server start", mlog.Err(err))
 	}
 
+	// Initialize AI services
+	app := New(ServerConnector(s.Channels()))
+	if err = app.InitializeAI(); err != nil {
+		mlog.Error("Failed to initialize AI services", mlog.Err(err))
+	}
+
 	mlog.Info("Starting Server...")
 
 	var handler http.Handler = s.RootRouter

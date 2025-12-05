@@ -5,7 +5,9 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
+	"github.com/joho/godotenv"
 	"github.com/mattermost/mattermost/server/v8/cmd/mattermost/commands"
 	// Import and register app layer slash commands
 	_ "github.com/mattermost/mattermost/server/v8/channels/app/slashcommands"
@@ -17,6 +19,15 @@ import (
 )
 
 func main() {
+	// Load .env file if it exists
+	envPath := filepath.Join(".", ".env")
+	if _, err := os.Stat(envPath); err == nil {
+		if err := godotenv.Load(envPath); err != nil {
+			// Don't fail if .env doesn't load, just log it
+			// The server can still use config.json or environment variables
+		}
+	}
+
 	if err := commands.Run(os.Args[1:]); err != nil {
 		os.Exit(1)
 	}

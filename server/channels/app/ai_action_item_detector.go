@@ -23,11 +23,19 @@ func (a *App) DetectActionItems(c request.CTX, post *model.Post) (*ActionItemDet
 	}
 
 	// Quick heuristic check before calling AI
-	if !a.likelyContainsActionItem(post.Message) {
-		c.Logger().Debug("Post unlikely to contain action items", 
+	likelyContains := a.likelyContainsActionItem(post.Message)
+	c.Logger().Info("Heuristic check result", 
+		mlog.Bool("likely_contains", likelyContains),
+		mlog.String("message", post.Message))
+	
+	if !likelyContains {
+		c.Logger().Info("Post unlikely to contain action items - skipping AI call", 
 			mlog.String("post_id", post.Id))
 		return &ActionItemDetectionResult{Detected: false}, nil
 	}
+	
+	c.Logger().Info("Post passed heuristic check - calling OpenAI", 
+		mlog.String("post_id", post.Id))
 
 	// Get channel and user context
 	channel, err := a.GetChannel(c, post.ChannelId)
@@ -40,8 +48,21 @@ func (a *App) DetectActionItems(c request.CTX, post *model.Post) (*ActionItemDet
 		return nil, err
 	}
 
+	// Build context - include parent post if this is a reply
+	messageContext := post.Message
+	if post.RootId != "" {
+		parentPost, err := a.GetSinglePost(c, post.RootId, false)
+		if err == nil {
+			parentUser, err := a.GetUser(parentPost.UserId)
+			if err == nil {
+				messageContext = fmt.Sprintf("Previous message from %s: \"%s\"\n\nCurrent message: %s", 
+					parentUser.Username, parentPost.Message, post.Message)
+			}
+		}
+	}
+
 	// Call OpenAI for extraction
-	items, appErr := a.extractActionItemsWithAI(c, post.Message, user.Username, channel.DisplayName)
+	items, appErr := a.extractActionItemsWithAI(c, messageContext, user.Username, channel.DisplayName)
 	if appErr != nil {
 		c.Logger().Error("Failed to extract action items with AI",
 			mlog.String("post_id", post.Id),
@@ -159,22 +180,30 @@ func (a *App) parseActionItemsResponse(response string) ([]*model.AIActionItem, 
 	response = strings.TrimSuffix(response, "```")
 	response = strings.TrimSpace(response)
 
-	// Parse JSON
-	var rawItems []struct {
-		Description string `json:"description"`
-		Assignee    string `json:"assignee"`
-		DueDate     string `json:"due_date"`
-		Priority    string `json:"priority"`
+	// Parse JSON - match the structure from the prompt template
+	var aiResponse struct {
+		HasActionItems bool `json:"has_action_items"`
+		ActionItems    []struct {
+			Description string `json:"description"`
+			Assignee    string `json:"assignee"`
+			Deadline    string `json:"deadline"`  // OpenAI uses "deadline", not "due_date"
+			Priority    string `json:"priority"`
+		} `json:"action_items"`
 	}
 
-	if err := json.Unmarshal([]byte(response), &rawItems); err != nil {
+	if err := json.Unmarshal([]byte(response), &aiResponse); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON response: %w", err)
 	}
 
+	// Check if AI detected any action items
+	if !aiResponse.HasActionItems || len(aiResponse.ActionItems) == 0 {
+		return []*model.AIActionItem{}, nil
+	}
+
 	// Convert to action items
-	items := make([]*model.AIActionItem, 0, len(rawItems))
+	items := make([]*model.AIActionItem, 0, len(aiResponse.ActionItems))
 	
-	for _, raw := range rawItems {
+	for _, raw := range aiResponse.ActionItems {
 		if raw.Description == "" {
 			continue
 		}
@@ -185,21 +214,21 @@ func (a *App) parseActionItemsResponse(response string) ([]*model.AIActionItem, 
 			Status:      "open",
 		}
 
-		// Parse due date
-		if raw.DueDate != "" {
-			dueTime, err := time.Parse(time.RFC3339, raw.DueDate)
-			if err != nil {
-				// Try other common formats
-				dueTime, err = time.Parse("2006-01-02", raw.DueDate)
-			}
-			if err == nil {
+		// Parse deadline - try to convert natural language to timestamp
+		if raw.Deadline != "" && raw.Deadline != "unspecified" {
+			dueTime := a.parseDeadline(raw.Deadline)
+			if !dueTime.IsZero() {
 				item.DueDate = dueTime.UnixMilli()
+				// Log the parsed deadline for debugging
+				fmt.Printf("DEBUG: Parsed deadline '%s' to %v (timestamp: %d)\n", raw.Deadline, dueTime, item.DueDate)
+			} else {
+				fmt.Printf("DEBUG: Failed to parse deadline '%s'\n", raw.Deadline)
 			}
 		}
 
 		// Assignee will be resolved later based on username/mention
 		// Store the raw assignee for now
-		if raw.Assignee != "" {
+		if raw.Assignee != "" && raw.Assignee != "unspecified" {
 			// This would need to be resolved to a user ID
 			// For now, we'll handle this in the detection flow
 		}
@@ -208,6 +237,42 @@ func (a *App) parseActionItemsResponse(response string) ([]*model.AIActionItem, 
 	}
 
 	return items, nil
+}
+
+// parseDeadline tries to parse natural language deadlines into timestamps
+func (a *App) parseDeadline(deadline string) time.Time {
+	deadline = strings.ToLower(strings.TrimSpace(deadline))
+	now := time.Now()
+
+	// Try ISO format first
+	if t, err := time.Parse(time.RFC3339, deadline); err == nil {
+		return t
+	}
+	if t, err := time.Parse("2006-01-02", deadline); err == nil {
+		return t
+	}
+
+	// Natural language parsing
+	switch {
+	case strings.Contains(deadline, "today"):
+		return now
+	case strings.Contains(deadline, "tomorrow"):
+		return now.AddDate(0, 0, 1)
+	case strings.Contains(deadline, "end of this week"), strings.Contains(deadline, "end of week"):
+		// Friday of current week
+		daysUntilFriday := (5 - int(now.Weekday()) + 7) % 7
+		if daysUntilFriday == 0 {
+			daysUntilFriday = 7
+		}
+		return now.AddDate(0, 0, daysUntilFriday)
+	case strings.Contains(deadline, "next week"):
+		return now.AddDate(0, 0, 7)
+	case strings.Contains(deadline, "end of month"):
+		return time.Date(now.Year(), now.Month()+1, 0, 23, 59, 59, 0, now.Location())
+	}
+
+	// If we can't parse it, return zero time
+	return time.Time{}
 }
 
 // normalizePriority normalizes priority strings
@@ -261,9 +326,16 @@ func (a *App) resolveAssignee(c request.CTX, assignee string, channelID string, 
 
 // AutoDetectAndCreateActionItems automatically detects and creates action items from a post
 func (a *App) AutoDetectAndCreateActionItems(c request.CTX, post *model.Post) error {
+	c.Logger().Info("AutoDetectAndCreateActionItems triggered", 
+		mlog.String("post_id", post.Id),
+		mlog.Int("message_length", len(post.Message)))
+	
 	if !a.IsAIFeatureEnabled("action_items") {
+		c.Logger().Info("Action items feature check failed")
 		return nil
 	}
+	
+	c.Logger().Info("Action items feature enabled, proceeding with detection")
 
 	// Detect action items
 	result, err := a.DetectActionItems(c, post)
@@ -297,11 +369,17 @@ func (a *App) AutoDetectAndCreateActionItems(c request.CTX, post *model.Post) er
 			continue
 		}
 
+		dueStr := "no due date"
+		if created.DueDate > 0 {
+			dueStr = time.UnixMilli(created.DueDate).Format("2006-01-02 15:04")
+		}
 		c.Logger().Info("Auto-created action item",
 			mlog.String("action_item_id", created.Id),
 			mlog.String("post_id", post.Id),
 			mlog.String("assignee_id", created.AssigneeId),
 			mlog.String("description", created.Description),
+			mlog.String("due_date", dueStr),
+			mlog.String("priority", created.Priority),
 		)
 
 		// Send a notification to the assignee

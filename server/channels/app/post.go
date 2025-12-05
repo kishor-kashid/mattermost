@@ -379,7 +379,13 @@ func (a *App) CreatePost(rctx request.CTX, post *model.Post, channel *model.Chan
 	})
 
 	// AI Action Item Detection - auto-detect commitments and tasks
-	if a.IsAIFeatureEnabled("action_items") {
+	actionItemsEnabled := a.IsAIFeatureEnabled("action_items")
+	rctx.Logger().Info("Checking AI action items feature", 
+		mlog.Bool("enabled", actionItemsEnabled),
+		mlog.String("post_id", rpost.Id))
+	
+	if actionItemsEnabled {
+		rctx.Logger().Info("Starting auto-detection goroutine", mlog.String("post_id", rpost.Id))
 		a.Srv().Go(func() {
 			if err := a.AutoDetectAndCreateActionItems(rctx, rpost); err != nil {
 				rctx.Logger().Error("Failed to auto-detect action items",
