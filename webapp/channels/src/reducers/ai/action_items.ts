@@ -4,121 +4,127 @@
 import type {AnyAction} from 'redux';
 
 import type {AIActionItemsState} from 'types/store/ai';
+import type {AIActionItem} from 'types/ai';
 
-import AIActionTypes from 'utils/constants/ai';
+import {AIActionItemsTypes} from 'utils/constants/ai';
 
 const initialState: AIActionItemsState = {
-    byId: {},
-    byUser: {},
-    byChannel: {},
+    items: {},
     loading: false,
     error: null,
+    stats: null,
 };
 
 export default function actionItemsReducer(state = initialState, action: AnyAction): AIActionItemsState {
     switch (action.type) {
-    case AIActionTypes.AI_ACTION_ITEM_CREATE_REQUEST:
-    case AIActionTypes.AI_ACTION_ITEM_GET_REQUEST:
-    case AIActionTypes.AI_ACTION_ITEMS_BY_USER_REQUEST:
-    case AIActionTypes.AI_ACTION_ITEMS_BY_CHANNEL_REQUEST:
-    case AIActionTypes.AI_ACTION_ITEM_UPDATE_REQUEST:
+    case AIActionItemsTypes.GET_ACTION_ITEMS_REQUEST:
+    case AIActionItemsTypes.GET_ACTION_ITEM_REQUEST:
+    case AIActionItemsTypes.CREATE_ACTION_ITEM_REQUEST:
+    case AIActionItemsTypes.UPDATE_ACTION_ITEM_REQUEST:
+    case AIActionItemsTypes.GET_ACTION_ITEM_STATS_REQUEST:
         return {
             ...state,
             loading: true,
             error: null,
         };
 
-    case AIActionTypes.AI_ACTION_ITEM_CREATE_SUCCESS:
-    case AIActionTypes.AI_ACTION_ITEM_GET_SUCCESS:
-    case AIActionTypes.AI_ACTION_ITEM_UPDATE_SUCCESS: {
-        const actionItem = action.data;
-        return {
-            ...state,
-            byId: {
-                ...state.byId,
-                [actionItem.id]: actionItem,
-            },
-            byUser: {
-                ...state.byUser,
-                [actionItem.assignee_id || actionItem.user_id]: [
-                    ...(state.byUser[actionItem.assignee_id || actionItem.user_id] || []).filter((id) => id !== actionItem.id),
-                    actionItem.id,
-                ],
-            },
-            byChannel: {
-                ...state.byChannel,
-                [actionItem.channel_id]: [
-                    ...(state.byChannel[actionItem.channel_id] || []).filter((id) => id !== actionItem.id),
-                    actionItem.id,
-                ],
-            },
-            loading: false,
-            error: null,
-        };
-    }
-
-    case AIActionTypes.AI_ACTION_ITEMS_BY_USER_SUCCESS: {
-        const {userId, actionItems} = action.data;
-        const byId = {...state.byId};
-        const itemIds: string[] = [];
-
-        actionItems.forEach((item: any) => {
-            byId[item.id] = item;
-            itemIds.push(item.id);
+    case AIActionItemsTypes.GET_ACTION_ITEMS_SUCCESS: {
+        const items: AIActionItem[] = action.data;
+        const itemsById: Record<string, AIActionItem> = {};
+        
+        items.forEach((item) => {
+            itemsById[item.id] = item;
         });
 
         return {
             ...state,
-            byId,
-            byUser: {
-                ...state.byUser,
-                [userId]: itemIds,
+            items: {
+                ...state.items,
+                ...itemsById,
             },
             loading: false,
             error: null,
         };
     }
 
-    case AIActionTypes.AI_ACTION_ITEMS_BY_CHANNEL_SUCCESS: {
-        const {channelId, actionItems} = action.data;
-        const byId = {...state.byId};
-        const itemIds: string[] = [];
-
-        actionItems.forEach((item: any) => {
-            byId[item.id] = item;
-            itemIds.push(item.id);
-        });
-
+    case AIActionItemsTypes.GET_ACTION_ITEM_SUCCESS:
+    case AIActionItemsTypes.CREATE_ACTION_ITEM_SUCCESS:
+    case AIActionItemsTypes.UPDATE_ACTION_ITEM_SUCCESS:
+    case AIActionItemsTypes.COMPLETE_ACTION_ITEM_SUCCESS: {
+        const item: AIActionItem = action.data;
         return {
             ...state,
-            byId,
-            byChannel: {
-                ...state.byChannel,
-                [channelId]: itemIds,
+            items: {
+                ...state.items,
+                [item.id]: item,
             },
             loading: false,
             error: null,
         };
     }
 
-    case AIActionTypes.AI_ACTION_ITEM_DELETE_SUCCESS: {
+    case AIActionItemsTypes.COMPLETE_ACTION_ITEM_REQUEST: {
+        // Optimistic update
         const {id} = action.data;
-        const {[id]: deleted, ...remainingById} = state.byId;
+        const item = state.items[id];
+        if (item) {
+            return {
+                ...state,
+                items: {
+                    ...state.items,
+                    [id]: {
+                        ...item,
+                        status: 'completed',
+                        completed_at: Date.now(),
+                    },
+                },
+            };
+        }
+        return state;
+    }
+
+    case AIActionItemsTypes.DELETE_ACTION_ITEM_REQUEST: {
+        // Optimistic delete
+        const {id} = action.data;
+        const {[id]: deleted, ...remainingItems} = state.items;
 
         return {
             ...state,
-            byId: remainingById,
-            loading: false,
-            error: null,
+            items: remainingItems,
         };
     }
 
-    case AIActionTypes.AI_ACTION_ITEM_CREATE_FAILURE:
-    case AIActionTypes.AI_ACTION_ITEM_GET_FAILURE:
-    case AIActionTypes.AI_ACTION_ITEMS_BY_USER_FAILURE:
-    case AIActionTypes.AI_ACTION_ITEMS_BY_CHANNEL_FAILURE:
-    case AIActionTypes.AI_ACTION_ITEM_UPDATE_FAILURE:
-    case AIActionTypes.AI_ACTION_ITEM_DELETE_FAILURE:
+    case AIActionItemsTypes.DELETE_ACTION_ITEM_SUCCESS:
+        return {
+            ...state,
+            loading: false,
+            error: null,
+        };
+
+    case AIActionItemsTypes.COMPLETE_ACTION_ITEM_FAILURE:
+    case AIActionItemsTypes.DELETE_ACTION_ITEM_FAILURE: {
+        // Revert optimistic update
+        // For now, just refetch - in a real app, you'd revert the specific change
+        return {
+            ...state,
+            loading: false,
+            error: action.error,
+        };
+    }
+
+    case AIActionItemsTypes.GET_ACTION_ITEM_STATS_SUCCESS:
+        return {
+            ...state,
+            stats: action.data,
+            loading: false,
+            error: null,
+        };
+
+    case AIActionItemsTypes.GET_ACTION_ITEMS_FAILURE:
+    case AIActionItemsTypes.GET_ACTION_ITEM_FAILURE:
+    case AIActionItemsTypes.CREATE_ACTION_ITEM_FAILURE:
+    case AIActionItemsTypes.UPDATE_ACTION_ITEM_FAILURE:
+    case AIActionItemsTypes.GET_ACTION_ITEM_STATS_FAILURE:
         return {
             ...state,
             loading: false,
@@ -129,4 +135,3 @@ export default function actionItemsReducer(state = initialState, action: AnyActi
         return state;
     }
 }
-

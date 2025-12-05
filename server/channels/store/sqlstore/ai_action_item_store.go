@@ -31,15 +31,15 @@ func (s *SqlAIActionItemStore) Save(actionItem *model.AIActionItem) (*model.AIAc
 	}
 
 	query := s.getQueryBuilder().
-		Insert("AIActionItems").
+		Insert("aiactionitems").
 		Columns(
-			"Id", "ChannelId", "PostId", "UserId", "AssigneeId",
-			"Description", "Deadline", "Status", "ReminderSent",
-			"CreateAt", "UpdateAt", "DeleteAt",
+			"id", "channelid", "postid", "createdby", "assigneeid",
+			"description", "duedate", "priority", "status", "completedat",
+			"createdat", "updatedat", "deletedat",
 		).
 		Values(
-			actionItem.Id, actionItem.ChannelId, actionItem.PostId, actionItem.UserId, actionItem.AssigneeId,
-			actionItem.Description, actionItem.Deadline, actionItem.Status, actionItem.ReminderSent,
+			actionItem.Id, actionItem.ChannelId, actionItem.PostId, actionItem.CreatedBy, actionItem.AssigneeId,
+			actionItem.Description, actionItem.DueDate, actionItem.Priority, actionItem.Status, actionItem.CompletedAt,
 			actionItem.CreateAt, actionItem.UpdateAt, actionItem.DeleteAt,
 		)
 
@@ -53,8 +53,8 @@ func (s *SqlAIActionItemStore) Save(actionItem *model.AIActionItem) (*model.AIAc
 func (s *SqlAIActionItemStore) Get(id string) (*model.AIActionItem, error) {
 	query := s.getQueryBuilder().
 		Select("*").
-		From("AIActionItems").
-		Where(sq.Eq{"Id": id, "DeleteAt": 0})
+		From("aiactionitems").
+		Where(sq.Eq{"id": id, "deletedat": 0})
 
 	var actionItem model.AIActionItem
 	err := s.GetReplica().GetBuilder(&actionItem, query)
@@ -69,12 +69,17 @@ func (s *SqlAIActionItemStore) Get(id string) (*model.AIActionItem, error) {
 	return &actionItem, nil
 }
 
-func (s *SqlAIActionItemStore) GetByChannel(channelId string, offset, limit int) ([]*model.AIActionItem, error) {
+func (s *SqlAIActionItemStore) GetByChannel(channelId string, includeCompleted bool, offset, limit int) ([]*model.AIActionItem, error) {
 	query := s.getQueryBuilder().
 		Select("*").
-		From("AIActionItems").
-		Where(sq.Eq{"ChannelId": channelId, "DeleteAt": 0}).
-		OrderBy("CreateAt DESC").
+		From("aiactionitems").
+		Where(sq.Eq{"channelid": channelId, "deletedat": 0})
+	
+	if !includeCompleted {
+		query = query.Where(sq.NotEq{"status": "completed"})
+	}
+	
+	query = query.OrderBy("createdat DESC").
 		Limit(uint64(limit)).
 		Offset(uint64(offset))
 
@@ -88,12 +93,21 @@ func (s *SqlAIActionItemStore) GetByChannel(channelId string, offset, limit int)
 	return actionItems, nil
 }
 
-func (s *SqlAIActionItemStore) GetByUser(userId string, offset, limit int) ([]*model.AIActionItem, error) {
+func (s *SqlAIActionItemStore) GetByUser(userId string, includeCompleted bool, offset, limit int) ([]*model.AIActionItem, error) {
 	query := s.getQueryBuilder().
 		Select("*").
-		From("AIActionItems").
-		Where(sq.Eq{"UserId": userId, "DeleteAt": 0}).
-		OrderBy("CreateAt DESC").
+		From("aiactionitems").
+		Where(sq.Or{
+			sq.Eq{"assigneeid": userId},
+			sq.Eq{"createdby": userId},
+		}).
+		Where(sq.Eq{"deletedat": 0})
+	
+	if !includeCompleted {
+		query = query.Where(sq.NotEq{"status": "completed"})
+	}
+	
+	query = query.OrderBy("createdat DESC").
 		Limit(uint64(limit)).
 		Offset(uint64(offset))
 
@@ -110,9 +124,9 @@ func (s *SqlAIActionItemStore) GetByUser(userId string, offset, limit int) ([]*m
 func (s *SqlAIActionItemStore) GetByAssignee(assigneeId string, offset, limit int) ([]*model.AIActionItem, error) {
 	query := s.getQueryBuilder().
 		Select("*").
-		From("AIActionItems").
-		Where(sq.Eq{"AssigneeId": assigneeId, "DeleteAt": 0}).
-		OrderBy("CreateAt DESC").
+		From("aiactionitems").
+		Where(sq.Eq{"assigneeid": assigneeId, "deletedat": 0}).
+		OrderBy("createdat DESC").
 		Limit(uint64(limit)).
 		Offset(uint64(offset))
 
@@ -126,23 +140,48 @@ func (s *SqlAIActionItemStore) GetByAssignee(assigneeId string, offset, limit in
 	return actionItems, nil
 }
 
-func (s *SqlAIActionItemStore) GetPendingReminders(currentTime int64) ([]*model.AIActionItem, error) {
+func (s *SqlAIActionItemStore) GetOverdue(currentTime int64) ([]*model.AIActionItem, error) {
 	query := s.getQueryBuilder().
 		Select("*").
-		From("AIActionItems").
+		From("aiactionitems").
 		Where(sq.And{
-			sq.Eq{"Status": model.AIActionItemStatusPending},
-			sq.Eq{"ReminderSent": false},
-			sq.Eq{"DeleteAt": 0},
-			sq.NotEq{"Deadline": nil},
-			sq.LtOrEq{"Deadline": currentTime},
-		})
+			sq.NotEq{"status": "completed"},
+			sq.NotEq{"status": "dismissed"},
+			sq.Eq{"deletedat": 0},
+			sq.NotEq{"duedate": 0},
+			sq.Lt{"duedate": currentTime},
+		}).
+		OrderBy("duedate ASC")
 
 	var actionItems []*model.AIActionItem
 	err := s.GetReplica().SelectBuilder(&actionItems, query)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to find pending reminder AIActionItems")
+		return nil, errors.Wrap(err, "failed to find overdue AIActionItems")
+	}
+
+	return actionItems, nil
+}
+
+func (s *SqlAIActionItemStore) GetDueSoon(startTime, endTime int64) ([]*model.AIActionItem, error) {
+	query := s.getQueryBuilder().
+		Select("*").
+		From("aiactionitems").
+		Where(sq.And{
+			sq.NotEq{"status": "completed"},
+			sq.NotEq{"status": "dismissed"},
+			sq.Eq{"deletedat": 0},
+			sq.NotEq{"duedate": 0},
+			sq.GtOrEq{"duedate": startTime},
+			sq.LtOrEq{"duedate": endTime},
+		}).
+		OrderBy("duedate ASC")
+
+	var actionItems []*model.AIActionItem
+	err := s.GetReplica().SelectBuilder(&actionItems, query)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find due soon AIActionItems")
 	}
 
 	return actionItems, nil
@@ -156,14 +195,15 @@ func (s *SqlAIActionItemStore) Update(actionItem *model.AIActionItem) (*model.AI
 	}
 
 	query := s.getQueryBuilder().
-		Update("AIActionItems").
-		Set("AssigneeId", actionItem.AssigneeId).
-		Set("Description", actionItem.Description).
-		Set("Deadline", actionItem.Deadline).
-		Set("Status", actionItem.Status).
-		Set("ReminderSent", actionItem.ReminderSent).
-		Set("UpdateAt", actionItem.UpdateAt).
-		Where(sq.Eq{"Id": actionItem.Id})
+		Update("aiactionitems").
+		Set("assigneeid", actionItem.AssigneeId).
+		Set("description", actionItem.Description).
+		Set("duedate", actionItem.DueDate).
+		Set("priority", actionItem.Priority).
+		Set("status", actionItem.Status).
+		Set("completedat", actionItem.CompletedAt).
+		Set("updatedat", actionItem.UpdateAt).
+		Where(sq.Eq{"id": actionItem.Id})
 
 	result, err := s.GetMaster().ExecBuilder(query)
 	if err != nil {
@@ -180,9 +220,9 @@ func (s *SqlAIActionItemStore) Update(actionItem *model.AIActionItem) (*model.AI
 
 func (s *SqlAIActionItemStore) Delete(id string, deleteAt int64) error {
 	query := s.getQueryBuilder().
-		Update("AIActionItems").
-		Set("DeleteAt", deleteAt).
-		Where(sq.Eq{"Id": id})
+		Update("aiactionitems").
+		Set("deletedat", deleteAt).
+		Where(sq.Eq{"id": id})
 
 	result, err := s.GetMaster().ExecBuilder(query)
 	if err != nil {
@@ -199,8 +239,8 @@ func (s *SqlAIActionItemStore) Delete(id string, deleteAt int64) error {
 
 func (s *SqlAIActionItemStore) PermanentDelete(id string) error {
 	query := s.getQueryBuilder().
-		Delete("AIActionItems").
-		Where(sq.Eq{"Id": id})
+		Delete("aiactionitems").
+		Where(sq.Eq{"id": id})
 
 	result, err := s.GetMaster().ExecBuilder(query)
 	if err != nil {
@@ -214,4 +254,3 @@ func (s *SqlAIActionItemStore) PermanentDelete(id string) error {
 
 	return nil
 }
-

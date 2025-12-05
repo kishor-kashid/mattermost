@@ -1,0 +1,156 @@
+.action-item-card {
+    border: 1px solid var(--center-channel-color-16);
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: var(--center-channel-bg);
+    transition: all 0.2s ease;
+
+    &:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    &.priority-urgent {
+        border-left: 4px solid #d32f2f;
+    }
+
+    &.priority-high {
+        border-left: 4px solid #f57c00;
+    }
+
+    &.priority-medium {
+        border-left: 4px solid #fbc02d;
+    }
+
+    &.priority-low {
+        border-left: 4px solid #388e3c;
+    }
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    &__priority {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        text-transform: capitalize;
+        color: var(--center-channel-color-64);
+
+        .priority-icon {
+            font-size: 16px;
+        }
+    }
+
+    &__status {
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+
+            &.status-open {
+                background: #e3f2fd;
+                color: #1976d2;
+            }
+
+            &.status-in-progress {
+                background: #fff3e0;
+                color: #f57c00;
+            }
+
+            &.status-completed {
+                background: #e8f5e9;
+                color: #388e3c;
+            }
+
+            &.status-dismissed {
+                background: #f5f5f5;
+                color: #757575;
+            }
+        }
+    }
+
+    &__body {
+        margin-bottom: 12px;
+    }
+
+    &__description {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--center-channel-color);
+    }
+
+    &__footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    &__meta {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--center-channel-color-64);
+
+        .due-date {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            &.overdue {
+                color: #d32f2f;
+                font-weight: 600;
+            }
+
+            &.due-soon {
+                color: #f57c00;
+            }
+
+            .overdue-icon {
+                font-size: 14px;
+            }
+        }
+
+        .source-link {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--button-bg);
+            text-decoration: none;
+
+            &:hover {
+                text-decoration: underline;
+            }
+
+            i {
+                font-size: 14px;
+            }
+        }
+    }
+
+    &__actions {
+        display: flex;
+        gap: 8px;
+
+        button {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            i {
+                font-size: 16px;
+            }
+        }
+    }
+}
+

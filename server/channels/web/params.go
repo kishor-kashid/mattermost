@@ -56,6 +56,7 @@ type Params struct {
 	JobId                              string
 	JobType                            string
 	ActionId                           string
+	ActionItemId                       string
 	RoleId                             string
 	RoleName                           string
 	SchemeId                           string
@@ -170,6 +171,7 @@ func ParamsFromRequest(r *http.Request) *Params {
 	params.JobId = props["job_id"]
 	params.JobType = props["job_type"]
 	params.ActionId = props["action_id"]
+	params.ActionItemId = props["action_item_id"]
 	params.RoleId = props["role_id"]
 	params.RoleName = props["role_name"]
 	params.SchemeId = props["scheme_id"]

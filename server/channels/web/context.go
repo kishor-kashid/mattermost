@@ -322,6 +322,17 @@ func (c *Context) RequireTeamId() *Context {
 	return c
 }
 
+func (c *Context) RequireActionItemId() *Context {
+	if c.Err != nil {
+		return c
+	}
+
+	if !model.IsValidId(c.Params.ActionItemId) {
+		c.SetInvalidURLParam("action_item_id")
+	}
+	return c
+}
+
 func (c *Context) RequireCategoryId() *Context {
 	if c.Err != nil {
 		return c

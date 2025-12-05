@@ -44,6 +44,7 @@ import (
 	"github.com/mattermost/mattermost/server/v8/channels/jobs/delete_dms_preferences_migration"
 	"github.com/mattermost/mattermost/server/v8/channels/jobs/delete_empty_drafts_migration"
 	"github.com/mattermost/mattermost/server/v8/channels/jobs/delete_orphan_drafts_migration"
+	"github.com/mattermost/mattermost/server/v8/channels/jobs/ai_action_item_reminders"
 	"github.com/mattermost/mattermost/server/v8/channels/jobs/expirynotify"
 	"github.com/mattermost/mattermost/server/v8/channels/jobs/export_delete"
 	"github.com/mattermost/mattermost/server/v8/channels/jobs/export_process"
@@ -1487,6 +1488,14 @@ func (s *Server) initJobs() {
 		model.JobTypeExpiryNotify,
 		expirynotify.MakeWorker(s.Jobs, New(ServerConnector(s.Channels())).NotifySessionsExpired),
 		expirynotify.MakeScheduler(s.Jobs),
+	)
+
+	s.Jobs.RegisterJobType(
+		model.JobTypeAIActionItemReminders,
+		ai_action_item_reminders.MakeWorker(s.Jobs, func(c request.CTX) error {
+			return ai_action_item_reminders.SendActionItemReminders(c, New(ServerConnector(s.Channels())))
+		}),
+		ai_action_item_reminders.MakeScheduler(s.Jobs),
 	)
 
 	s.Jobs.RegisterJobType(

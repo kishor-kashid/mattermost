@@ -19,11 +19,10 @@ export type AISummariesState = {
 };
 
 export type AIActionItemsState = {
-    byId: Record<string, AIActionItem>;
-    byUser: Record<string, string[]>;
-    byChannel: Record<string, string[]>;
+    items: Record<string, AIActionItem>;
     loading: boolean;
     error: string | null;
+    stats: any | null;
 };
 
 export type AIAnalyticsState = {

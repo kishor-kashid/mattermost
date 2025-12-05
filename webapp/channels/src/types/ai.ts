@@ -1,7 +1,8 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-export type AIActionItemStatus = 'pending' | 'completed' | 'dismissed';
+export type AIActionItemStatus = 'open' | 'in_progress' | 'completed' | 'dismissed';
+export type AIActionItemPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 export type AISummaryType = 'thread' | 'channel';
 
@@ -9,15 +10,59 @@ export interface AIActionItem {
     id: string;
     channel_id: string;
     post_id?: string;
-    user_id: string;
+    created_by: string;
     assignee_id?: string;
     description: string;
-    deadline?: number;
+    due_date?: number;
+    priority: AIActionItemPriority;
     status: AIActionItemStatus;
-    reminder_sent: boolean;
+    completed_at?: number;
     create_at: number;
     update_at: number;
     delete_at: number;
+}
+
+export interface ActionItemCreateRequest {
+    description: string;
+    assignee_id: string;
+    channel_id: string;
+    post_id?: string;
+    due_date?: Date;
+    priority?: AIActionItemPriority;
+    status?: AIActionItemStatus;
+}
+
+export interface ActionItemUpdateRequest {
+    description?: string;
+    assignee_id?: string;
+    due_date?: Date;
+    priority?: AIActionItemPriority;
+    status?: AIActionItemStatus;
+    completed_at?: Date;
+}
+
+export interface ActionItemFilters {
+    userId?: string;
+    channelId?: string;
+    status?: AIActionItemStatus;
+    priority?: AIActionItemPriority;
+    dueBefore?: Date;
+    dueAfter?: Date;
+    assignedBy?: string;
+    includeCompleted?: boolean;
+    page?: number;
+    perPage?: number;
+}
+
+export interface ActionItemStats {
+    total: number;
+    overdue: number;
+    dueToday: number;
+    dueSoon: number;
+    noDueDate: number;
+    completed: number;
+    byPriority: Record<string, number>;
+    byStatus: Record<string, number>;
 }
 
 export interface AISummary {

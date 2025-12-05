@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	AIActionItemStatusPending   = "pending"
-	AIActionItemStatusCompleted = "completed"
-	AIActionItemStatusDismissed = "dismissed"
+	AIActionItemStatusOpen       = "open"
+	AIActionItemStatusInProgress = "in_progress"
+	AIActionItemStatusCompleted  = "completed"
+	AIActionItemStatusDismissed  = "dismissed"
 
 	AISummaryTypeThread  = "thread"
 	AISummaryTypeChannel = "channel"
@@ -19,18 +20,19 @@ const (
 
 // AIActionItem represents an AI-detected action item from a message
 type AIActionItem struct {
-	Id            string `json:"id"`
-	ChannelId     string `json:"channel_id"`
-	PostId        string `json:"post_id,omitempty"`
-	UserId        string `json:"user_id"`
-	AssigneeId    string `json:"assignee_id,omitempty"`
-	Description   string `json:"description"`
-	Deadline      int64  `json:"deadline,omitempty"`
-	Status        string `json:"status"`
-	ReminderSent  bool   `json:"reminder_sent"`
-	CreateAt      int64  `json:"create_at"`
-	UpdateAt      int64  `json:"update_at"`
-	DeleteAt      int64  `json:"delete_at"`
+	Id          string `json:"id" db:"id"`
+	ChannelId   string `json:"channel_id" db:"channelid"`
+	PostId      string `json:"post_id,omitempty" db:"postid"`
+	CreatedBy   string `json:"created_by" db:"createdby"`
+	AssigneeId  string `json:"assignee_id,omitempty" db:"assigneeid"`
+	Description string `json:"description" db:"description"`
+	DueDate     int64  `json:"due_date,omitempty" db:"duedate"`
+	Priority    string `json:"priority" db:"priority"`
+	Status      string `json:"status" db:"status"`
+	CompletedAt int64  `json:"completed_at,omitempty" db:"completedat"`
+	CreateAt    int64  `json:"create_at" db:"createdat"`
+	UpdateAt    int64  `json:"update_at" db:"updatedat"`
+	DeleteAt    int64  `json:"delete_at" db:"deletedat"`
 }
 
 func (a *AIActionItem) IsValid() *AppError {
@@ -42,8 +44,8 @@ func (a *AIActionItem) IsValid() *AppError {
 		return NewAppError("AIActionItem.IsValid", "model.ai_action_item.is_valid.channel_id.app_error", nil, "", http.StatusBadRequest)
 	}
 
-	if !IsValidId(a.UserId) {
-		return NewAppError("AIActionItem.IsValid", "model.ai_action_item.is_valid.user_id.app_error", nil, "", http.StatusBadRequest)
+	if !IsValidId(a.CreatedBy) {
+		return NewAppError("AIActionItem.IsValid", "model.ai_action_item.is_valid.created_by.app_error", nil, "", http.StatusBadRequest)
 	}
 
 	if a.AssigneeId != "" && !IsValidId(a.AssigneeId) {
@@ -54,8 +56,12 @@ func (a *AIActionItem) IsValid() *AppError {
 		return NewAppError("AIActionItem.IsValid", "model.ai_action_item.is_valid.description.app_error", nil, "", http.StatusBadRequest)
 	}
 
-	if a.Status != AIActionItemStatusPending && a.Status != AIActionItemStatusCompleted && a.Status != AIActionItemStatusDismissed {
+	if a.Status != "open" && a.Status != "in_progress" && a.Status != "completed" && a.Status != "dismissed" {
 		return NewAppError("AIActionItem.IsValid", "model.ai_action_item.is_valid.status.app_error", nil, "", http.StatusBadRequest)
+	}
+	
+	if a.Priority != "" && a.Priority != "low" && a.Priority != "medium" && a.Priority != "high" && a.Priority != "urgent" {
+		return NewAppError("AIActionItem.IsValid", "model.ai_action_item.is_valid.priority.app_error", nil, "", http.StatusBadRequest)
 	}
 
 	if a.CreateAt == 0 {
@@ -75,13 +81,12 @@ func (a *AIActionItem) PreSave() {
 	}
 
 	if a.Status == "" {
-		a.Status = AIActionItemStatusPending
+		a.Status = AIActionItemStatusOpen
 	}
 
 	a.CreateAt = GetMillis()
 	a.UpdateAt = a.CreateAt
 	a.DeleteAt = 0
-	a.ReminderSent = false
 }
 
 func (a *AIActionItem) PreUpdate() {

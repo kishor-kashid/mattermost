@@ -111,27 +111,47 @@ export class AIClient {
         );
     }
 
-    async getActionItemsByChannel(channelId: string, page = 0, perPage = 60): Promise<AIActionItem[]> {
+    async getActionItems(filters?: any): Promise<AIActionItem[]> {
+        const params = new URLSearchParams();
+        if (filters) {
+            if (filters.userId) params.append('user_id', filters.userId);
+            if (filters.channelId) params.append('channel_id', filters.channelId);
+            if (filters.status) params.append('status', filters.status);
+            if (filters.priority) params.append('priority', filters.priority);
+            if (filters.includeCompleted) params.append('include_completed', 'true');
+            if (filters.page !== undefined) params.append('page', filters.page.toString());
+            if (filters.perPage !== undefined) params.append('per_page', filters.perPage.toString());
+        }
+        
+        const queryString = params.toString();
         return Client4.doFetch(
-            `${this.baseRoute}/actionitems/channel/${channelId}?page=${page}&per_page=${perPage}`,
+            `${this.baseRoute}/actionitems${queryString ? '?' + queryString : ''}`,
             {method: 'get'},
         );
     }
 
+    async getActionItemsByChannel(channelId: string, page = 0, perPage = 60): Promise<AIActionItem[]> {
+        return this.getActionItems({channelId, page, perPage});
+    }
+
     async getActionItemsByUser(userId: string, page = 0, perPage = 60): Promise<AIActionItem[]> {
-        return Client4.doFetch(
-            `${this.baseRoute}/actionitems/user/${userId}?page=${page}&per_page=${perPage}`,
-            {method: 'get'},
-        );
+        return this.getActionItems({userId, page, perPage});
     }
 
     async updateActionItem(id: string, actionItem: Partial<AIActionItem>): Promise<AIActionItem> {
         return Client4.doFetch(
             `${this.baseRoute}/actionitems/${id}`,
             {
-                method: 'patch',
+                method: 'put',
                 body: JSON.stringify(actionItem),
             },
+        );
+    }
+
+    async completeActionItem(id: string): Promise<AIActionItem> {
+        return Client4.doFetch(
+            `${this.baseRoute}/actionitems/${id}/complete`,
+            {method: 'post'},
         );
     }
 
@@ -139,6 +159,14 @@ export class AIClient {
         return Client4.doFetch(
             `${this.baseRoute}/actionitems/${id}`,
             {method: 'delete'},
+        );
+    }
+
+    async getActionItemStats(userId?: string): Promise<any> {
+        const params = userId ? `?user_id=${userId}` : '';
+        return Client4.doFetch(
+            `${this.baseRoute}/actionitems/stats${params}`,
+            {method: 'get'},
         );
     }
 

@@ -378,6 +378,18 @@ func (a *App) CreatePost(rctx request.CTX, post *model.Post, channel *model.Chan
 		}, plugin.MessageHasBeenPostedID)
 	})
 
+	// AI Action Item Detection - auto-detect commitments and tasks
+	if a.IsAIFeatureEnabled("action_items") {
+		a.Srv().Go(func() {
+			if err := a.AutoDetectAndCreateActionItems(rctx, rpost); err != nil {
+				rctx.Logger().Error("Failed to auto-detect action items",
+					mlog.String("post_id", rpost.Id),
+					mlog.Err(err),
+				)
+			}
+		})
+	}
+
 	// Normally, we would let the API layer call PreparePostForClient, but we do it here since it also needs
 	// to be done when we send the post over the websocket in handlePostEvents
 	// PS: we don't want to include PostPriority from the db to avoid the replica lag,

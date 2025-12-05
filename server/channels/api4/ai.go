@@ -18,6 +18,7 @@ func (api *API) InitAI() {
 
 	// Feature-specific routes
 	api.initSummarizerRoutes()
+	api.InitAIActionItemsRoutes()
 }
 
 // requireAIEnabled checks if AI features are enabled in the configuration

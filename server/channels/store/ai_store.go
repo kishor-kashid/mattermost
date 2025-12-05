@@ -16,16 +16,19 @@ type AIActionItemStore interface {
 	Get(id string) (*model.AIActionItem, error)
 	
 	// GetByChannel retrieves all action items for a channel
-	GetByChannel(channelId string, offset, limit int) ([]*model.AIActionItem, error)
+	GetByChannel(channelId string, includeCompleted bool, offset, limit int) ([]*model.AIActionItem, error)
 	
-	// GetByUser retrieves all action items assigned to a user
-	GetByUser(userId string, offset, limit int) ([]*model.AIActionItem, error)
+	// GetByUser retrieves all action items created by or assigned to a user
+	GetByUser(userId string, includeCompleted bool, offset, limit int) ([]*model.AIActionItem, error)
 	
 	// GetByAssignee retrieves all action items for a specific assignee
 	GetByAssignee(assigneeId string, offset, limit int) ([]*model.AIActionItem, error)
 	
-	// GetPendingReminders retrieves action items that need reminders sent
-	GetPendingReminders(currentTime int64) ([]*model.AIActionItem, error)
+	// GetOverdue retrieves action items that are past their due date
+	GetOverdue(currentTime int64) ([]*model.AIActionItem, error)
+	
+	// GetDueSoon retrieves action items due within a time range
+	GetDueSoon(startTime, endTime int64) ([]*model.AIActionItem, error)
 	
 	// Update updates an existing action item
 	Update(actionItem *model.AIActionItem) (*model.AIActionItem, error)

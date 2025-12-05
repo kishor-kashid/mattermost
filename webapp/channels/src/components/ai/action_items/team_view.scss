@@ -1,0 +1,112 @@
+.team-action-items-view {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    .team-view-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+
+        h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--center-channel-color);
+        }
+
+        button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            i {
+                font-size: 16px;
+            }
+        }
+    }
+
+    .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        color: var(--center-channel-color-64);
+
+        i {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 20px;
+        text-align: center;
+        color: var(--center-channel-color-64);
+
+        i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        p {
+            margin: 0;
+            font-size: 16px;
+        }
+    }
+
+    .team-view-content {
+        .assignee-section {
+            margin-bottom: 32px;
+            border: 1px solid var(--center-channel-color-16);
+            border-radius: 8px;
+            overflow: hidden;
+
+            .assignee-title {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 16px;
+                background: var(--center-channel-color-08);
+                border-bottom: 1px solid var(--center-channel-color-16);
+                font-size: 16px;
+                font-weight: 600;
+                margin: 0;
+                color: var(--center-channel-color);
+
+                i {
+                    font-size: 20px;
+                }
+
+                .item-count {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 24px;
+                    height: 24px;
+                    padding: 0 8px;
+                    background: var(--button-bg);
+                    color: var(--button-color);
+                    border-radius: 12px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    margin-left: auto;
+                }
+            }
+
+            .assignee-items {
+                padding: 16px;
+            }
+        }
+    }
+}
+

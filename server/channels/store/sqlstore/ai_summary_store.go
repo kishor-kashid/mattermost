@@ -33,9 +33,9 @@ func (s *SqlAISummaryStore) Save(summary *model.AISummary) (*model.AISummary, er
 	query := s.getQueryBuilder().
 		Insert("AISummaries").
 		Columns(
-			"Id", "ChannelId", "PostId", "SummaryType", "Summary",
-			"MessageCount", "StartTime", "EndTime", "UserId", "Participants",
-			"CacheKey", "ChannelName", "CreateAt", "ExpiresAt",
+			"id", "channelid", "postid", "summarytype", "summary",
+			"messagecount", "starttime", "endtime", "userid", "participants",
+			"cachekey", "channelname", "createdat", "expiresat",
 		).
 		Values(
 			summary.Id, summary.ChannelId, summary.PostId, summary.SummaryType, summary.Summary,
@@ -53,8 +53,8 @@ func (s *SqlAISummaryStore) Save(summary *model.AISummary) (*model.AISummary, er
 func (s *SqlAISummaryStore) Get(id string) (*model.AISummary, error) {
 	query := s.getQueryBuilder().
 		Select("*").
-		From("AISummaries").
-		Where(sq.Eq{"Id": id})
+		From("aisummaries").
+		Where(sq.Eq{"id": id})
 
 	var summary model.AISummary
 	err := s.GetReplica().GetBuilder(&summary, query)
@@ -72,9 +72,9 @@ func (s *SqlAISummaryStore) Get(id string) (*model.AISummary, error) {
 func (s *SqlAISummaryStore) GetByChannel(channelId string, offset, limit int) ([]*model.AISummary, error) {
 	query := s.getQueryBuilder().
 		Select("*").
-		From("AISummaries").
-		Where(sq.Eq{"ChannelId": channelId}).
-		OrderBy("CreateAt DESC").
+		From("aisummaries").
+		Where(sq.Eq{"channelid": channelId}).
+		OrderBy("createdat DESC").
 		Limit(uint64(limit)).
 		Offset(uint64(offset))
 
@@ -122,12 +122,12 @@ func (s *SqlAISummaryStore) GetByCacheKey(cacheKey string) (*model.AISummary, er
 
 	query := s.getQueryBuilder().
 		Select("*").
-		From("AISummaries").
+		From("aisummaries").
 		Where(sq.And{
-			sq.Eq{"CacheKey": cacheKey},
-			sq.Gt{"ExpiresAt": currentTime},
+			sq.Eq{"cachekey": cacheKey},
+			sq.Gt{"expiresat": currentTime},
 		}).
-		OrderBy("CreateAt DESC").
+		OrderBy("createdat DESC").
 		Limit(1)
 
 	var summary model.AISummary
@@ -145,8 +145,8 @@ func (s *SqlAISummaryStore) GetByCacheKey(cacheKey string) (*model.AISummary, er
 
 func (s *SqlAISummaryStore) DeleteExpired(currentTime int64) (int64, error) {
 	query := s.getQueryBuilder().
-		Delete("AISummaries").
-		Where(sq.LtOrEq{"ExpiresAt": currentTime})
+		Delete("aisummaries").
+		Where(sq.LtOrEq{"expiresat": currentTime})
 
 	result, err := s.GetMaster().ExecBuilder(query)
 	if err != nil {
@@ -159,8 +159,8 @@ func (s *SqlAISummaryStore) DeleteExpired(currentTime int64) (int64, error) {
 
 func (s *SqlAISummaryStore) Delete(id string) error {
 	query := s.getQueryBuilder().
-		Delete("AISummaries").
-		Where(sq.Eq{"Id": id})
+		Delete("aisummaries").
+		Where(sq.Eq{"id": id})
 
 	result, err := s.GetMaster().ExecBuilder(query)
 	if err != nil {

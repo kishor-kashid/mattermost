@@ -1,4 +1,20 @@
-CREATE TABLE IF NOT EXISTS aiactionitems (
+-- Fix AI Action Items Table Schema
+-- Run this in your PostgreSQL database
+
+-- Drop the old table and indexes
+DROP INDEX IF EXISTS idx_aiactionitems_deletedat;
+DROP INDEX IF EXISTS idx_aiactionitems_duedate;
+DROP INDEX IF EXISTS idx_aiactionitems_deadline;
+DROP INDEX IF EXISTS idx_aiactionitems_priority;
+DROP INDEX IF EXISTS idx_aiactionitems_status;
+DROP INDEX IF EXISTS idx_aiactionitems_assigneeid;
+DROP INDEX IF EXISTS idx_aiactionitems_createdby;
+DROP INDEX IF EXISTS idx_aiactionitems_userid;
+DROP INDEX IF EXISTS idx_aiactionitems_channelid;
+DROP TABLE IF EXISTS aiactionitems;
+
+-- Recreate with correct schema
+CREATE TABLE aiactionitems (
     id VARCHAR(26) PRIMARY KEY,
     channelid VARCHAR(26) NOT NULL,
     postid VARCHAR(26),
@@ -14,6 +30,7 @@ CREATE TABLE IF NOT EXISTS aiactionitems (
     deletedat BIGINT DEFAULT 0
 );
 
+-- Create indexes
 CREATE INDEX idx_aiactionitems_channelid ON aiactionitems(channelid);
 CREATE INDEX idx_aiactionitems_createdby ON aiactionitems(createdby);
 CREATE INDEX idx_aiactionitems_assigneeid ON aiactionitems(assigneeid);

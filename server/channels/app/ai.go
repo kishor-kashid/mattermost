@@ -133,7 +133,7 @@ func (a *App) IsAIFeatureEnabled(feature string) bool {
 			mlog.Bool("enabled", featureEnabled))
 	case "analytics":
 		featureEnabled = a.Config().AISettings.EnableAnalytics != nil && *a.Config().AISettings.EnableAnalytics
-	case "actionitems":
+	case "action_items", "actionitems":
 		featureEnabled = a.Config().AISettings.EnableActionItems != nil && *a.Config().AISettings.EnableActionItems
 	case "formatting":
 		featureEnabled = a.Config().AISettings.EnableFormatting != nil && *a.Config().AISettings.EnableFormatting
