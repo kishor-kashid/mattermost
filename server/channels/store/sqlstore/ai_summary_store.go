@@ -34,11 +34,13 @@ func (s *SqlAISummaryStore) Save(summary *model.AISummary) (*model.AISummary, er
 		Insert("AISummaries").
 		Columns(
 			"Id", "ChannelId", "PostId", "SummaryType", "Summary",
-			"MessageCount", "StartTime", "EndTime", "CreateAt", "ExpiresAt",
+			"MessageCount", "StartTime", "EndTime", "UserId", "Participants",
+			"CacheKey", "ChannelName", "CreateAt", "ExpiresAt",
 		).
 		Values(
 			summary.Id, summary.ChannelId, summary.PostId, summary.SummaryType, summary.Summary,
-			summary.MessageCount, summary.StartTime, summary.EndTime, summary.CreateAt, summary.ExpiresAt,
+			summary.MessageCount, summary.StartTime, summary.EndTime, summary.UserId, summary.Participants,
+			summary.CacheKey, summary.ChannelName, summary.CreateAt, summary.ExpiresAt,
 		)
 
 	if _, err := s.GetMaster().ExecBuilder(query); err != nil {
@@ -110,6 +112,32 @@ func (s *SqlAISummaryStore) GetCachedSummary(channelId, summaryType string, star
 			return nil, store.NewErrNotFound("AISummary", channelId)
 		}
 		return nil, errors.Wrapf(err, "failed to find cached AISummary for channelId=%s", channelId)
+	}
+
+	return &summary, nil
+}
+
+func (s *SqlAISummaryStore) GetByCacheKey(cacheKey string) (*model.AISummary, error) {
+	currentTime := model.GetMillis()
+
+	query := s.getQueryBuilder().
+		Select("*").
+		From("AISummaries").
+		Where(sq.And{
+			sq.Eq{"CacheKey": cacheKey},
+			sq.Gt{"ExpiresAt": currentTime},
+		}).
+		OrderBy("CreateAt DESC").
+		Limit(1)
+
+	var summary model.AISummary
+	err := s.GetReplica().GetBuilder(&summary, query)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.NewErrNotFound("AISummary", cacheKey)
+		}
+		return nil, errors.Wrapf(err, "failed to find AISummary with cacheKey=%s", cacheKey)
 	}
 
 	return &summary, nil

@@ -51,6 +51,9 @@ type AISummaryStore interface {
 	// GetCachedSummary retrieves a cached summary if not expired
 	GetCachedSummary(channelId, summaryType string, startTime, endTime int64) (*model.AISummary, error)
 	
+	// GetByCacheKey retrieves a summary by its cache key if not expired
+	GetByCacheKey(cacheKey string) (*model.AISummary, error)
+	
 	// DeleteExpired removes expired summaries
 	DeleteExpired(currentTime int64) (int64, error)
 	

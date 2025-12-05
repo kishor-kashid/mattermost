@@ -98,6 +98,10 @@ type AISummary struct {
 	MessageCount int    `json:"message_count"`
 	StartTime    int64  `json:"start_time"`
 	EndTime      int64  `json:"end_time"`
+	UserId       string `json:"user_id"`
+	Participants string `json:"participants,omitempty"`
+	CacheKey     string `json:"cache_key,omitempty"`
+	ChannelName  string `json:"channel_name,omitempty"`
 	CreateAt     int64  `json:"create_at"`
 	ExpiresAt    int64  `json:"expires_at"`
 }
@@ -109,6 +113,10 @@ func (s *AISummary) IsValid() *AppError {
 
 	if !IsValidId(s.ChannelId) {
 		return NewAppError("AISummary.IsValid", "model.ai_summary.is_valid.channel_id.app_error", nil, "", http.StatusBadRequest)
+	}
+
+	if !IsValidId(s.UserId) {
+		return NewAppError("AISummary.IsValid", "model.ai_summary.is_valid.user_id.app_error", nil, "", http.StatusBadRequest)
 	}
 
 	if s.SummaryType != AISummaryTypeThread && s.SummaryType != AISummaryTypeChannel {
