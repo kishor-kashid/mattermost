@@ -2792,6 +2792,56 @@ func (s *LibreTranslateProviderSettings) SetDefaults() {
 // 	}
 // }
 
+type AISettings struct {
+	Enable              *bool   `access:"integrations_ai,cloud_restrictable"`
+	OpenAIAPIKey        *string `access:"integrations_ai,cloud_restrictable"` // telemetry: none
+	OpenAIModel         *string `access:"integrations_ai,cloud_restrictable"`
+	MaxMessageLimit     *int    `access:"integrations_ai,cloud_restrictable"`
+	APIRateLimit        *int    `access:"integrations_ai,cloud_restrictable"`
+	EnableSummarization *bool   `access:"integrations_ai,cloud_restrictable"`
+	EnableAnalytics     *bool   `access:"integrations_ai,cloud_restrictable"`
+	EnableActionItems   *bool   `access:"integrations_ai,cloud_restrictable"`
+	EnableFormatting    *bool   `access:"integrations_ai,cloud_restrictable"`
+}
+
+func (s *AISettings) SetDefaults() {
+	if s.Enable == nil {
+		s.Enable = NewPointer(false)
+	}
+
+	if s.OpenAIAPIKey == nil {
+		s.OpenAIAPIKey = NewPointer("")
+	}
+
+	if s.OpenAIModel == nil {
+		s.OpenAIModel = NewPointer("gpt-3.5-turbo")
+	}
+
+	if s.MaxMessageLimit == nil {
+		s.MaxMessageLimit = NewPointer(500)
+	}
+
+	if s.APIRateLimit == nil {
+		s.APIRateLimit = NewPointer(60)
+	}
+
+	if s.EnableSummarization == nil {
+		s.EnableSummarization = NewPointer(true)
+	}
+
+	if s.EnableAnalytics == nil {
+		s.EnableAnalytics = NewPointer(true)
+	}
+
+	if s.EnableActionItems == nil {
+		s.EnableActionItems = NewPointer(true)
+	}
+
+	if s.EnableFormatting == nil {
+		s.EnableFormatting = NewPointer(true)
+	}
+}
+
 type SamlSettings struct {
 	// Basic
 	Enable                        *bool `access:"authentication_saml"`
@@ -3905,6 +3955,7 @@ type Config struct {
 	AccessControlSettings       AccessControlSettings
 	ContentFlaggingSettings     ContentFlaggingSettings
 	AutoTranslationSettings     AutoTranslationSettings
+	AISettings                  AISettings
 }
 
 func (o *Config) Auditable() map[string]any {
@@ -4001,6 +4052,7 @@ func (o *Config) SetDefaults() {
 	o.ComplianceSettings.SetDefaults()
 	o.LocalizationSettings.SetDefaults()
 	o.AutoTranslationSettings.SetDefaults()
+	o.AISettings.SetDefaults()
 	o.ElasticsearchSettings.SetDefaults()
 	o.NativeAppSettings.SetDefaults()
 	o.DataRetentionSettings.SetDefaults()

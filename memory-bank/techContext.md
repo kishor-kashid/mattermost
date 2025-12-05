@@ -256,7 +256,7 @@ type AISettings struct {
 ```go
 require (
     github.com/mattermost/mattermost/server/public v0.0.0
-    github.com/sashabaranov/go-openai v1.x
+    github.com/sashabaranov/go-openai v1.41.2  // Added in PR #1
     github.com/pkg/errors v0.9.x
 )
 ```

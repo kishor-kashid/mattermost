@@ -112,6 +112,10 @@ type SqlStoreStores struct {
 	Attributes                 store.AttributesStore
 	autotranslation            store.AutoTranslationStore
 	ContentFlagging            store.ContentFlaggingStore
+	aiActionItem               store.AIActionItemStore
+	aiSummary                  store.AISummaryStore
+	aiAnalytics                store.AIAnalyticsStore
+	aiPreferences              store.AIPreferencesStore
 }
 
 type SqlStore struct {
@@ -263,6 +267,10 @@ func New(settings model.SqlSettings, logger mlog.LoggerIFace, metrics einterface
 	store.stores.Attributes = newSqlAttributesStore(store, metrics)
 	store.stores.autotranslation = newSqlAutoTranslationStore(store)
 	store.stores.ContentFlagging = newContentFlaggingStore(store)
+	store.stores.aiActionItem = newSqlAIActionItemStore(store)
+	store.stores.aiSummary = newSqlAISummaryStore(store)
+	store.stores.aiAnalytics = newSqlAIAnalyticsStore(store)
+	store.stores.aiPreferences = newSqlAIPreferencesStore(store)
 
 	store.stores.preference.(*SqlPreferenceStore).deleteUnusedFeatures()
 
@@ -1066,4 +1074,20 @@ func (ss *SqlStore) ScheduledPost() store.ScheduledPostStore {
 
 func (ss *SqlStore) ContentFlagging() store.ContentFlaggingStore {
 	return ss.stores.ContentFlagging
+}
+
+func (ss *SqlStore) AIActionItem() store.AIActionItemStore {
+	return ss.stores.aiActionItem
+}
+
+func (ss *SqlStore) AISummary() store.AISummaryStore {
+	return ss.stores.aiSummary
+}
+
+func (ss *SqlStore) AIAnalytics() store.AIAnalyticsStore {
+	return ss.stores.aiAnalytics
+}
+
+func (ss *SqlStore) AIPreferences() store.AIPreferencesStore {
+	return ss.stores.aiPreferences
 }

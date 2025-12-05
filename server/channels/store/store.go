@@ -98,6 +98,10 @@ type Store interface {
 	AutoTranslation() AutoTranslationStore
 	GetSchemaDefinition() (*model.SupportPacketDatabaseSchema, error)
 	ContentFlagging() ContentFlaggingStore
+	AIActionItem() AIActionItemStore
+	AISummary() AISummaryStore
+	AIAnalytics() AIAnalyticsStore
+	AIPreferences() AIPreferencesStore
 }
 
 type RetentionPolicyStore interface {
