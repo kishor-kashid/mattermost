@@ -1,0 +1,177 @@
+.ai-preview-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.ai-preview-modal {
+    background: var(--center-channel-bg);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    max-width: 1200px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .ai-preview-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--center-channel-color-16);
+
+        h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--center-channel-color);
+        }
+
+        .ai-preview-modal-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ai-preview-view-toggle {
+            background: var(--button-bg-08);
+            border: 1px solid var(--button-bg-08);
+            border-radius: 4px;
+            color: var(--button-color);
+            cursor: pointer;
+            padding: 6px 12px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: var(--button-bg);
+            }
+        }
+
+        .ai-preview-close-button {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--center-channel-color-64);
+            transition: color 0.2s ease;
+
+            &:hover {
+                color: var(--center-channel-color);
+            }
+
+            i {
+                font-size: 24px;
+            }
+        }
+    }
+
+    .ai-preview-modal-body {
+        flex: 1;
+        overflow: auto;
+        padding: 24px;
+    }
+
+    .ai-preview-side-by-side {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        height: 100%;
+
+        .ai-preview-original,
+        .ai-preview-formatted {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-preview-section-header {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--center-channel-color);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--center-channel-color-16);
+        }
+
+        .ai-preview-text {
+            flex: 1;
+            padding: 12px;
+            background: var(--center-channel-color-04);
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--center-channel-color);
+            overflow-y: auto;
+            max-height: 500px;
+        }
+    }
+
+    .ai-preview-diff {
+        height: 100%;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .ai-preview-modal-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-top: 1px solid var(--center-channel-color-16);
+
+        .ai-preview-button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .ai-preview-button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+
+            &.ai-preview-button-primary {
+                background: var(--button-bg);
+                color: var(--button-color);
+
+                &:hover:not(:disabled) {
+                    background: var(--button-bg-08);
+                }
+
+                &:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            }
+
+            &.ai-preview-button-secondary {
+                background: var(--center-channel-color-08);
+                color: var(--center-channel-color);
+
+                &:hover {
+                    background: var(--center-channel-color-16);
+                }
+            }
+        }
+    }
+}
+

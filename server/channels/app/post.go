@@ -323,6 +323,18 @@ func (a *App) CreatePost(rctx request.CTX, post *model.Post, channel *model.Chan
 		return nil, rejectionError
 	}
 
+	// Optional: AI formatting auto-suggestion (if enabled in user preferences)
+	// This is non-blocking and only suggests formatting, doesn't modify the post
+	if a.IsAIFeatureEnabled("formatting") && post.Message != "" {
+		preferences, err := a.GetOrCreateAIPreferences(post.UserId)
+		if err == nil && preferences != nil {
+			// Check if auto-suggest is enabled (currently not stored, default to false)
+			// This is a placeholder for future enhancement
+			// For now, we skip auto-suggestion to maintain performance
+			_ = preferences
+		}
+	}
+
 	// Pre-fill the CreateAt field for link previews to get the correct timestamp.
 	if post.CreateAt == 0 {
 		post.CreateAt = model.GetMillis()

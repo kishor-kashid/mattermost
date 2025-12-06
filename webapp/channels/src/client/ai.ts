@@ -1,7 +1,7 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import type {AIActionItem, AIAnalytics, AIPreferences, AISummary, FormatMessageRequest, FormatMessageResponse, SummarizeRequest} from 'types/ai';
+import type {AIActionItem, AIAnalytics, AIPreferences, AISummary, FormatMessageRequest, FormatMessageResponse, FormattingProfileInfo, SummarizeRequest} from 'types/ai';
 
 import {Client4} from '@mattermost/client';
 
@@ -181,13 +181,30 @@ export class AIClient {
 
     // Message Formatting
 
-    async formatMessage(request: FormatMessageRequest): Promise<FormatMessageResponse> {
+    async formatPreview(request: FormatMessageRequest): Promise<FormatMessageResponse> {
         return Client4.doFetch(
-            `${this.baseRoute}/format`,
+            `${this.baseRoute}/format/preview`,
             {
                 method: 'post',
                 body: JSON.stringify(request),
             },
+        );
+    }
+
+    async formatApply(request: FormatMessageRequest): Promise<FormatMessageResponse> {
+        return Client4.doFetch(
+            `${this.baseRoute}/format/apply`,
+            {
+                method: 'post',
+                body: JSON.stringify(request),
+            },
+        );
+    }
+
+    async getFormattingProfiles(): Promise<FormattingProfileInfo[]> {
+        return Client4.doFetch(
+            `${this.baseRoute}/format/profiles`,
+            {method: 'get'},
         );
     }
 

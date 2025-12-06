@@ -7,6 +7,7 @@ import summaries from './summaries';
 import actionItems from './action_items';
 import analytics from './analytics';
 import preferences from './preferences';
+import formatter from './formatter';
 import system from './system';
 
 export default combineReducers({
@@ -14,6 +15,7 @@ export default combineReducers({
     actionItems,
     analytics,
     preferences,
+    formatter,
     system,
 });
 

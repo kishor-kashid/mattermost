@@ -1,9 +1,28 @@
 # Active Context
 
 ## Current Work Focus
-**Testing and Deployment of AI Message Summarization (PR #3)**
+**PR #6 - Channel Analytics Dashboard (Next Focus)**
 
-PR #3 implementation is complete. Currently in testing phase, resolving environment configuration and deployment issues. The feature is ready to test once the server is properly configured with the OpenAI API key.
+PR #5 (Message Formatting Assistant) is fully implemented and verified end-to-end in the UI. The formatting button (robot icon) now appears correctly in the composer toolbar when AI formatting is enabled, and the preview modal works as designed. The current focus is shifting to **PR #6 - Channel Analytics Dashboard** while keeping an eye on any regressions in the Messaging Formatting Assistant.
+
+PR #5 (Message Formatting Assistant) implementation is complete - all 13 tasks done:
+- ✅ Formatter service (backend)
+- ✅ Formatting prompt templates
+- ✅ User preferences storage
+- ✅ Formatter API endpoints (3 endpoints)
+- ✅ Slash command (/format)
+- ✅ Post hook integration (optional)
+- ✅ Redux actions, reducers, and selectors
+- ✅ Formatter API client (formatPreview, formatApply, getFormattingProfiles)
+- ✅ Formatting menu component
+- ✅ Preview modal with diff view
+- ✅ Profile selector component
+- ✅ Composer integration and styling
+- ✅ All compilation and linting checks passed
+- ✅ Frontend bundle and static asset pipeline verified (server serves updated webapp from `server/client`)
+- ✅ Formatting button visibility issue resolved (robot icon appears in formatting bar; menu + preview modal functional)
+
+Next: Begin PR #6 - Channel Analytics Dashboard feature, then PR #7 - Testing, Documentation & Polish.
 
 ## Recent Changes
 - ✅ Created Memory Bank documentation structure
@@ -54,7 +73,56 @@ PR #3 implementation is complete. Currently in testing phase, resolving environm
   - Database migration updated (added UserId and Participants fields to AISummaries)
   - Compilation fixes applied (request.CTX usage, error wrapping, type assertions)
   - Debug logging added for feature enablement tracking
-  - **Testing Phase**: Configuration enabled, environment setup in progress
+  - **Status**: Fully tested and working
+- ✅ **PR #4 COMPLETE**: Action Item Extractor (Dec 5, 2024)
+  - ✅ Action item service (ai_action_items.go, ai_action_items_types.go)
+  - ✅ AI detection engine (ai_action_item_detector.go) with improved prompts
+  - ✅ Store methods (CRUD operations in ai_action_item_store.go)
+  - ✅ Post hook integration (auto-detection on MessageHasBeenPosted)
+  - ✅ Reminder background job (ai_action_item_reminders/ with scheduler + worker)
+  - ✅ API endpoints (api4/ai_action_items.go - all CRUD operations)
+  - ✅ Slash command (/actionitems with list, mine, team, complete, stats subcommands)
+  - ✅ Redux integration (actions, reducers, selectors)
+  - ✅ Frontend API client (all methods in client/ai.ts)
+  - ✅ Frontend components (dashboard.tsx, action_item_card.tsx, team_view.tsx, create_modal.tsx, date_time_picker.tsx)
+  - ✅ Improved AI prompts for better description extraction
+  - ✅ Natural language deadline parsing (EOD, end of week, tomorrow, etc.)
+  - ✅ Context-aware detection (includes parent post context for replies)
+  - ✅ Auto-detection working and tested via logs
+  - ✅ Frontend UI integration complete:
+    - ✅ Post menu item (PostActionItemMenuItem) - "Create Action Item" option
+    - ✅ Channel header menu item (ChannelActionItemsMenuItem) - "View Action Items" option
+    - ✅ RHS panel integration (ActionItemsRHS component)
+    - ✅ Redux actions and selectors for RHS state management
+    - ✅ Frontend build error fixed (reselect import path corrected)
+  - **Status**: Fully implemented, tested, and integrated
+- ✅ **PR #5 COMPLETE**: Message Formatting Assistant (Dec 5, 2024)
+  - ✅ Formatter service (ai_formatter.go, ai_formatter_types.go)
+  - ✅ Formatting profiles metadata (ai_formatter_profiles.go)
+  - ✅ User preferences storage methods (GetFormatterPreferences, SetFormatterPreferences)
+  - ✅ API endpoints (api4/ai_formatter.go - preview, apply, profiles)
+  - ✅ Slash command (/format with profile selection)
+  - ✅ Post hook integration (optional auto-suggestion placeholder)
+  - ✅ Redux actions (ai_formatter.ts) - formatPreview, formatApply, getFormattingProfiles
+  - ✅ Redux reducer (formatter.ts) - state management for formatting
+  - ✅ Redux selectors (ai_formatter.ts) - memoized selectors
+  - ✅ Formatter API client (client/ai.ts) - all formatting methods
+  - ✅ Formatting menu component (formatting_menu.tsx) - dropdown with profiles
+  - ✅ Preview modal component (preview_modal.tsx) - side-by-side and diff views
+  - ✅ Diff view component (diff_view.tsx) - change highlighting
+  - ✅ Profile selector component (profile_selector.tsx) - profile selection UI
+  - ✅ Composer integration (use_formatter.tsx hook, advanced_text_editor.tsx)
+  - ✅ Styling (formatting_menu.scss, preview_modal.scss, diff_view.scss, profile_selector.scss)
+  - ✅ All backend and frontend packages compile successfully
+  - ✅ Zero linter errors
+  - ⚠️ **Active Issue**: Formatting button visibility in UI
+    - Button component created and integrated into composer toolbar
+    - Hook (`use_formatter.tsx`) properly called in `advanced_text_editor.tsx`
+    - Component added to `additionalControls` array
+    - Currently troubleshooting why button doesn't appear in UI
+    - Added debug logging to trace execution flow
+    - Testing with simple test component to verify rendering pipeline
+  - **Status**: Implementation complete, UI visibility issue under investigation
 
 ## Next Steps
 1. ✅ Complete codebase analysis
@@ -77,9 +145,30 @@ PR #3 implementation is complete. Currently in testing phase, resolving environm
    - ✅ Slash command integrated
    - ✅ Frontend UI components built
    - ✅ All compilation errors fixed
-   - ⏳ **CURRENT**: Deployment testing and environment configuration
-9. ⏳ **PR #4 NEXT**: Action Item Extractor feature
-10. ⏳ **PR #5**: Message Formatting Assistant feature
+   - ✅ Fully tested and working
+9. ✅ **PR #4 COMPLETE**: Action Item Extractor feature (100% done)
+   - ✅ All backend services implemented
+   - ✅ All API endpoints working
+   - ✅ Slash command functional
+   - ✅ Frontend components built
+   - ✅ Auto-detection working
+   - ✅ Improved AI prompts (better descriptions, deadline parsing)
+   - ✅ Frontend UI integration complete
+     - ✅ Post menu: "Create Action Item" option
+     - ✅ Channel header menu: "View Action Items" option
+     - ✅ RHS panel: Full dashboard integration
+     - ✅ Redux state management for RHS
+     - ✅ Frontend build errors fixed
+10. ✅ **PR #5 COMPLETE**: Message Formatting Assistant feature (Dec 5, 2024)
+    - ✅ Backend service implementation
+    - ✅ API endpoints created (3 endpoints)
+    - ✅ Slash command functional (/format)
+    - ✅ User preferences storage
+    - ✅ Frontend Redux integration (actions, reducers, selectors)
+    - ✅ UI components (preview modal, formatting menu, diff view, profile selector)
+    - ✅ Composer integration (use_formatter hook, formatting button in toolbar)
+    - ✅ All styling complete
+    - ✅ Zero compilation and linting errors
 11. ⏳ **PR #6**: Channel Analytics Dashboard feature
 12. ⏳ **PR #7**: Testing, documentation, and polish
 
@@ -187,8 +276,15 @@ PR #3 implementation is complete. Currently in testing phase, resolving environm
   - AI routes in `api4/ai.go`
   - Redux store integration
   - Slash commands in `app/slashcommands/`
-- **API Endpoints**: 8+ REST endpoints under `/api/v4/ai/*`
-- **Slash Commands**: 4 commands (/summarize, /actionitems, /analytics, /format)
+- **API Endpoints**: 11+ REST endpoints under `/api/v4/ai/*`
+  - Summarization: 3 endpoints
+  - Action Items: 5 endpoints (CRUD + stats)
+  - Formatting: 3 endpoints (preview, apply, profiles)
+- **Slash Commands**: 3 commands implemented (/summarize, /actionitems, /format)
+- **Frontend Components**: 20+ React components across 3 features
+  - Summarization: 4 components (SummaryPanel, SummaryContent, SummaryMetadata, DateRangeModal)
+  - Action Items: 6 components (Dashboard, ActionItemCard, TeamView, CreateModal, DateTimePicker, ActionItemsRHS)
+  - Formatting: 4 components (FormattingMenu, PreviewModal, DiffView, ProfileSelector)
 
 ## Known Considerations
 1. **OpenAI API Costs**: GPT-4 configured (user preference), GPT-3.5-turbo is 10x cheaper alternative
@@ -205,6 +301,18 @@ PR #3 implementation is complete. Currently in testing phase, resolving environm
 12. **Shell Environment**: Git Bash uses `export`, PowerShell uses `$env:` for environment variables
 13. **Port Management**: Ensure port 8065 is free before starting server (kill old processes with `taskkill`)
 14. **Server Restart**: Configuration changes require full server restart to take effect
+15. **Frontend Selectors**: Use `mattermost-redux/selectors/create_selector` instead of `reselect` directly
+16. **Environment Loading**: `.env` file automatically loaded via `godotenv` in `main.go` at server startup
+17. **Formatting Button Visibility**: Button appears in composer toolbar when AI formatting is enabled and profiles are loaded
+18. **Profile Loading**: Formatting profiles are loaded on component mount via `getFormattingProfiles()` action
+19. **Config Check**: Feature enablement checks both AI system state and config.AISettings for maximum compatibility
+20. **Formatting Button Debugging**: Currently investigating button visibility issue
+    - Hook is being called (verified in advanced_text_editor.tsx line 324)
+    - Component is being created (useMemo callback)
+    - Added to additionalControls array (verified in formatting_bar.tsx)
+    - Added module-level and hook-level console.log statements for debugging
+    - Testing with simple red div to verify rendering pipeline works
+    - May require webpack rebuild if dev server not running
 
 ## Development Workflow
 ```

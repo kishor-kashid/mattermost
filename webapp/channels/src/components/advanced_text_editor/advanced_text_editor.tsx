@@ -80,6 +80,7 @@ import ToggleFormattingBar from './toggle_formatting_bar';
 import UnifiedLabelsWrapper from './unified_labels_wrapper';
 import useBurnOnRead from './use_burn_on_read';
 import useEditorEmojiPicker from './use_editor_emoji_picker';
+import useFormatter from './use_formatter';
 import useKeyHandler from './use_key_handler';
 import useOrientationHandler from './use_orientation_handler';
 import usePluginItems from './use_plugin_items';
@@ -317,6 +318,10 @@ const AdvancedTextEditor = ({
         additionalControl: aiRewriteAdditionalControl,
         isProcessing: rewriteIsProcessing,
     } = useRewrite(draft, handleDraftChange, textboxRef, focusTextbox, setServerError);
+    const {
+        additionalControl: aiFormatterAdditionalControl,
+        previewModal: aiFormatterPreviewModal,
+    } = useFormatter(draft, handleDraftChange, textboxRef);
     const isDisabled = Boolean(readOnlyChannel || (!enableSharedChannelsDMs && isDMOrGMRemote) || rewriteIsProcessing);
 
     const [attachmentPreview, fileUploadJSX] = useUploadFiles(
@@ -706,12 +711,15 @@ const AdvancedTextEditor = ({
 
     const ariaLabel = loginSuccessfulLabel ? `${loginSuccessfulLabel} ${ariaLabelMessageInput}` : ariaLabelMessageInput;
 
-    const additionalControls = useMemo(() => [
-        !isInEditMode && priorityAdditionalControl,
-        aiRewriteEnabled && aiRewriteAdditionalControl,
-        !isInEditMode && burnOnReadAdditionalControl,
-        ...(pluginItems || []),
-    ].filter(Boolean), [pluginItems, priorityAdditionalControl, aiRewriteAdditionalControl, isInEditMode, aiRewriteEnabled, burnOnReadAdditionalControl]);
+    const additionalControls = useMemo(() => {
+        return [
+            !isInEditMode && priorityAdditionalControl,
+            aiRewriteEnabled && aiRewriteAdditionalControl,
+            aiFormatterAdditionalControl,
+            !isInEditMode && burnOnReadAdditionalControl,
+            ...(pluginItems || []),
+        ].filter(Boolean);
+    }, [pluginItems, priorityAdditionalControl, aiRewriteAdditionalControl, aiFormatterAdditionalControl, isInEditMode, aiRewriteEnabled, burnOnReadAdditionalControl]);
 
     const formattingBar = (
         <AutoHeightSwitcher
@@ -908,6 +916,7 @@ const AdvancedTextEditor = ({
                 aria-live='assertive'
                 className='sr-only'
             />
+            {aiFormatterPreviewModal}
         </form>
     );
 };

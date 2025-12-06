@@ -135,3 +135,43 @@ func (s *SqlAIPreferencesStore) Delete(userId string) error {
 	return nil
 }
 
+// GetFormatterPreferences retrieves formatting preferences for a user
+func (s *SqlAIPreferencesStore) GetFormatterPreferences(userId string) (string, bool, error) {
+	preferences, err := s.GetByUser(userId)
+	if err != nil {
+		// Return defaults if not found
+		return "professional", false, nil
+	}
+
+	defaultProfile := preferences.FormattingProfile
+	if defaultProfile == "" {
+		defaultProfile = "professional"
+	}
+
+	// Auto-suggest is not stored in current schema, default to false
+	autoSuggest := false
+
+	return defaultProfile, autoSuggest, nil
+}
+
+// SetFormatterPreferences updates formatting preferences for a user
+func (s *SqlAIPreferencesStore) SetFormatterPreferences(userId string, defaultProfile string, autoSuggest bool) error {
+	preferences, err := s.GetByUser(userId)
+	if err != nil {
+		// Create new preferences if not found
+		preferences = &model.AIPreferences{
+			UserId:            userId,
+			FormattingProfile: defaultProfile,
+		}
+		preferences.PreSave()
+		_, err = s.Save(preferences)
+		return err
+	}
+
+	// Update existing preferences
+	preferences.FormattingProfile = defaultProfile
+	preferences.PreUpdate()
+	_, err = s.Update(preferences)
+	return err
+}
+

@@ -87,7 +87,7 @@ webapp/
 ### Frontend Patterns
 1. **Container/Presenter**: Separation of logic and UI components
 2. **Redux Thunks**: Async action creators
-3. **Selectors**: Memoized data derivation (using reselect)
+3. **Selectors**: Memoized data derivation (using `mattermost-redux/selectors/create_selector`)
 4. **HOCs**: Higher-order components for cross-cutting concerns
 5. **Code Splitting**: Webpack dynamic imports for lazy loading
 
@@ -203,6 +203,18 @@ mattermost/
 5. Notify assignee via DM
 6. Frontend fetches via `/api/v4/ai/actionitems`
 7. Update Redux store → Re-render dashboard
+
+**Message Formatting Flow:**
+1. User types message → Clicks AI formatting button in composer toolbar
+2. FormattingMenu component loads profiles (if not loaded)
+3. User selects formatting profile from dropdown
+4. Webapp → Client4.formatPreview() → `/api/v4/ai/format/preview`
+5. API handler validates and calls formatter service
+6. Formatter service sends to OpenAI with profile-specific prompt
+7. Response parsed → Diff generated → Returned to frontend
+8. Preview modal displays (side-by-side or diff view)
+9. User clicks "Apply" → Formatted text replaces message in composer
+10. Redux state updated → Preview cleared
 
 **Analytics Collection Flow:**
 1. Message posted → `app.MessageHasBeenPosted()` extended

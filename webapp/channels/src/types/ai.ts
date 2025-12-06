@@ -114,10 +114,34 @@ export interface SummarizeRequest {
 export interface FormatMessageRequest {
     message: string;
     profile?: string;
+    custom_instructions?: string;
 }
 
 export interface FormatMessageResponse {
-    formatted_message: string;
+    formatted_text: string;
+    profile: string;
+    diff?: TextDiff;
+    processing_ms: number;
+}
+
+export interface TextDiff {
+    original: string;
+    formatted: string;
+    changes?: TextChange[];
+}
+
+export interface TextChange {
+    type: 'insert' | 'delete' | 'replace';
+    start: number;
+    end: number;
+    new_text?: string;
+    old_text?: string;
+}
+
+export interface FormattingProfileInfo {
+    id: string;
+    label: string;
+    description: string;
 }
 
 export interface AIConfig {

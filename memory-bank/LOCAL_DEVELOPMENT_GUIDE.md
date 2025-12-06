@@ -207,7 +207,9 @@ make clean-docker
 ```powershell
 cd server
 
-# Run webapp in watch mode
+# Run webapp in watch mode (preferred for development)
+# - Creates/refreshes a symlink: server/client -> webapp/channels/dist
+# - Webpack watches files and rebuilds automatically
 make run-client
 
 # Stop webapp
@@ -221,6 +223,13 @@ make test-client
 
 # Clean webapp build
 cd ../webapp && make clean
+
+# One-off: build static bundle for server-only runs (no run-client/dev-server)
+cd ../webapp
+npm run build --workspace=channels
+cd ..
+Remove-Item -Recurse -Force .\server\client\*
+Copy-Item -Recurse -Force .\webapp\channels\dist\* .\server\client\
 ```
 
 ### Combined Commands

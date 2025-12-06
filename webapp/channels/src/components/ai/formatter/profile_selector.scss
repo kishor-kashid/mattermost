@@ -1,0 +1,94 @@
+.ai-profile-selector {
+    margin-bottom: 20px;
+
+    .ai-profile-selector-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--center-channel-color);
+        margin-bottom: 12px;
+    }
+
+    .ai-profile-selector-options {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .ai-profile-option {
+        display: flex;
+        align-items: flex-start;
+        padding: 12px;
+        border: 1px solid var(--center-channel-color-16);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--center-channel-bg);
+
+        &:hover {
+            border-color: var(--button-bg);
+            background: var(--center-channel-color-04);
+        }
+
+        &.selected {
+            border-color: var(--button-bg);
+            background: var(--button-bg-08);
+        }
+
+        input[type='radio'] {
+            margin-right: 12px;
+            margin-top: 2px;
+        }
+
+        .ai-profile-option-content {
+            flex: 1;
+
+            .ai-profile-option-label {
+                font-weight: 600;
+                font-size: 14px;
+                color: var(--center-channel-color);
+                margin-bottom: 4px;
+            }
+
+            .ai-profile-option-description {
+                font-size: 12px;
+                color: var(--center-channel-color-64);
+                line-height: 1.4;
+            }
+        }
+    }
+
+    .ai-profile-custom-instructions {
+        margin-top: 16px;
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--center-channel-color);
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--center-channel-color-16);
+            border-radius: 4px;
+            background: var(--center-channel-bg);
+            color: var(--center-channel-color);
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+
+            &:focus {
+                outline: none;
+                border-color: var(--button-bg);
+            }
+
+            &::placeholder {
+                color: var(--center-channel-color-64);
+            }
+        }
+    }
+}
+

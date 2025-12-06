@@ -47,6 +47,7 @@ import * as Utils from 'utils/utils';
 import type {ModalData} from 'types/actions';
 
 import PostReminderSubMenu from './post_reminder_submenu';
+import PostActionItemMenuItem from 'components/ai/action_items/post_action_item_menu_item';
 
 import './dot_menu.scss';
 
@@ -711,6 +712,12 @@ export class DotMenuClass extends React.PureComponent<Props, State> {
                         isDestructive={true}
                     />
                 }
+                {!isSystemMessage && !isBurnOnReadPost && <Menu.Separator/>}
+                <PostActionItemMenuItem
+                    postId={this.props.post.id}
+                    channelId={this.props.post.channel_id}
+                    onClose={() => this.props.handleDropdownOpened?.(false)}
+                />
             </Menu.Container>
         );
     }

@@ -101,5 +101,11 @@ type AIPreferencesStore interface {
 	
 	// Delete removes user preferences
 	Delete(userId string) error
+	
+	// GetFormatterPreferences retrieves formatting preferences for a user
+	GetFormatterPreferences(userId string) (defaultProfile string, autoSuggest bool, err error)
+	
+	// SetFormatterPreferences updates formatting preferences for a user
+	SetFormatterPreferences(userId string, defaultProfile string, autoSuggest bool) error
 }
 

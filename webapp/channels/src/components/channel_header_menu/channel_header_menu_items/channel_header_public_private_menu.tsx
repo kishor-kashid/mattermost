@@ -31,6 +31,7 @@ import MenuItemToggleInfo from '../menu_items/toggle_info';
 import MenuItemToggleMuteChannel from '../menu_items/toggle_mute_channel';
 import MenuItemUnarchiveChannel from '../menu_items/unarchive_channel';
 import MenuItemViewPinnedPosts from '../menu_items/view_pinned_posts';
+import ChannelActionItemsMenuItem from 'components/ai/action_items/channel_action_items_menu_item';
 
 interface Props extends Menu.FirstMenuItemProps {
     channel: Channel;
@@ -77,6 +78,12 @@ const ChannelHeaderPublicMenu = ({channel, user, isMuted, isDefault, isMobile, i
                     {isChannelBookmarksEnabled && (
                         <MenuItemChannelBookmarks
                             channel={channel}
+                        />
+                    )}
+                    {!isArchived && (
+                        <ChannelActionItemsMenuItem
+                            channelId={channel.id}
+                            onClose={rest.onClose}
                         />
                     )}
                 </>

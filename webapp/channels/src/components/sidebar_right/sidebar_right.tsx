@@ -18,6 +18,7 @@ import ResizableRhs from 'components/resizable_sidebar/resizable_rhs';
 import RhsCard from 'components/rhs_card';
 import RhsThread from 'components/rhs_thread';
 import Search from 'components/search/index';
+import ActionItemsRHS from 'components/ai/action_items/action_items_rhs';
 
 import RhsPlugin from 'plugins/rhs_plugin';
 import a11yController from 'utils/a11y_controller_instance';
@@ -42,6 +43,7 @@ export type Props = {
     isChannelFiles: boolean;
     isChannelInfo: boolean;
     isChannelMembers: boolean;
+    isActionItems: boolean;
     isPluginView: boolean;
     isPostEditHistory: boolean;
     previousRhsState: RhsState;
@@ -61,6 +63,7 @@ export type Props = {
         updateSearchTerms: (terms: string) => void;
         showChannelFiles: (channelId: string) => void;
         showChannelInfo: (channelId: string) => void;
+        openRHSForActionItems: (channelId: string) => void;
     };
 }
 
@@ -201,13 +204,17 @@ export default class SidebarRight extends React.PureComponent<Props, State> {
     componentDidUpdate(prevProps: Props) {
         this.handleRHSFocus(prevProps);
 
-        const {actions, isChannelFiles, isPinnedPosts, rhsChannel, channel} = this.props;
+        const {actions, isChannelFiles, isPinnedPosts, isActionItems, rhsChannel, channel} = this.props;
         if (isPinnedPosts && prevProps.isPinnedPosts === isPinnedPosts && rhsChannel && rhsChannel.id !== prevProps.rhsChannel?.id) {
             actions.showPinnedPosts(rhsChannel.id);
         }
 
         if (isChannelFiles && prevProps.isChannelFiles === isChannelFiles && rhsChannel && rhsChannel.id !== prevProps.rhsChannel?.id) {
             actions.showChannelFiles(rhsChannel.id);
+        }
+
+        if (isActionItems && prevProps.isActionItems === isActionItems && rhsChannel && rhsChannel.id !== prevProps.rhsChannel?.id) {
+            actions.openRHSForActionItems(rhsChannel.id);
         }
 
         // in the case of navigating to another channel
@@ -266,6 +273,7 @@ export default class SidebarRight extends React.PureComponent<Props, State> {
             isOpen,
             isChannelInfo,
             isChannelMembers,
+            isActionItems,
             isExpanded,
             isPostEditHistory,
         } = this.props;
@@ -300,6 +308,9 @@ export default class SidebarRight extends React.PureComponent<Props, State> {
         } else if (isChannelMembers) {
             currentChannelNeeded = true;
             content = <ChannelMembersRhs/>;
+        } else if (isActionItems) {
+            currentChannelNeeded = true;
+            content = <ActionItemsRHS/>;
         } else if (isPostEditHistory) {
             content = <PostEditHistory/>;
         }

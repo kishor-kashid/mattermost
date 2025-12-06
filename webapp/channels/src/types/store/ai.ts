@@ -1,13 +1,14 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import type {AIActionItem, AIAnalytics, AIPreferences, AISummary} from 'types/ai';
+import type {AIActionItem, AIAnalytics, AIPreferences, AISummary, FormatMessageResponse, FormattingProfileInfo} from 'types/ai';
 
 export type AIState = {
     summaries: AISummariesState;
     actionItems: AIActionItemsState;
     analytics: AIAnalyticsState;
     preferences: AIPreferencesState;
+    formatter: AIFormatterState;
     system: AISystemState;
 };
 
@@ -34,6 +35,14 @@ export type AIAnalyticsState = {
 export type AIPreferencesState = {
     byUser: Record<string, AIPreferences>;
     loading: boolean;
+    error: string | null;
+};
+
+export type AIFormatterState = {
+    preview: FormatMessageResponse | null;
+    profiles: FormattingProfileInfo[];
+    loading: boolean;
+    formatting: boolean;
     error: string | null;
 };
 

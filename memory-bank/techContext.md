@@ -196,7 +196,7 @@ type AISettings struct {
 - **AIActionItems**: Action items with assignees, deadlines, status
 - **AISummaries**: Cached summaries with expiration (24h TTL)
 - **AIAnalytics**: Daily aggregated channel metrics
-- **AIPreferences**: Per-user AI feature preferences
+- **AIPreferences**: Per-user AI feature preferences (includes formatting preferences)
 
 **Retention Policies:**
 - Summaries: 24 hours (cache with ExpiresAt)
@@ -228,7 +228,7 @@ type AISettings struct {
 3. **Background Processing**: Jobs don't block message flow
 4. **Pre-aggregation**: Daily analytics aggregation job
 5. **Lazy Loading**: Frontend components fetch on demand
-6. **Redux Memoization**: Reselect for computed state
+6. **Redux Memoization**: Mattermost-redux createSelector for computed state
 
 **Resource Limits:**
 - Max messages for summarization: 500 (configurable)

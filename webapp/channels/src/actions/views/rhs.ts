@@ -489,6 +489,14 @@ export function showChannelInfo(channelId: string) {
     };
 }
 
+export function openRHSForActionItems(channelId: string) {
+    return {
+        type: ActionTypes.UPDATE_RHS_STATE,
+        channelId,
+        state: RHSStates.ACTION_ITEMS,
+    };
+}
+
 export function closeRightHandSide(): ActionFunc {
     return (dispatch) => {
         const actionsBatch: AnyAction[] = [

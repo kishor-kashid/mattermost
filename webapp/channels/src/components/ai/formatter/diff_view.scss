@@ -1,0 +1,32 @@
+.ai-diff-view {
+    padding: 12px;
+    background: var(--center-channel-color-04);
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.ai-diff-content {
+    .ai-diff-unchanged {
+        color: var(--center-channel-color);
+    }
+
+    .ai-diff-deleted {
+        background: rgba(244, 67, 54, 0.2);
+        color: #f44336;
+        text-decoration: line-through;
+        padding: 2px 0;
+    }
+
+    .ai-diff-inserted {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4caf50;
+        padding: 2px 0;
+    }
+}
+
