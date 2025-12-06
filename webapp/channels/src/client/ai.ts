@@ -124,15 +124,10 @@ export class AIClient {
         }
         
         const queryString = params.toString();
-        const url = `${this.baseRoute}/actionitems${queryString ? '?' + queryString : ''}`;
-        console.log('[aiClient.getActionItems] Fetching from URL:', url);
-        
-        const response = await Client4.doFetch(url, {method: 'get'});
-        console.log('[aiClient.getActionItems] Raw response:', response);
-        console.log('[aiClient.getActionItems] Response type:', typeof response);
-        console.log('[aiClient.getActionItems] Is array:', Array.isArray(response));
-        
-        return response;
+        return Client4.doFetch(
+            `${this.baseRoute}/actionitems${queryString ? '?' + queryString : ''}`,
+            {method: 'get'},
+        );
     }
 
     async getActionItemsByChannel(channelId: string, page = 0, perPage = 60): Promise<AIActionItem[]> {

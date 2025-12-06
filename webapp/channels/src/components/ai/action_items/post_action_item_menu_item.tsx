@@ -25,8 +25,6 @@ interface Props {
 let currentModal: {element: HTMLElement; cleanup: () => void} | null = null;
 
 const showCreateModal = (postId: string, channelId: string) => {
-    console.log('[PostActionItemMenuItem] showCreateModal called', {postId, channelId});
-    
     // Clean up any existing modal
     if (currentModal) {
         currentModal.cleanup();
@@ -37,10 +35,8 @@ const showCreateModal = (postId: string, channelId: string) => {
     const modalContainer = document.createElement('div');
     modalContainer.id = `action-item-modal-${postId}`;
     document.body.appendChild(modalContainer);
-    console.log('[PostActionItemMenuItem] Modal container created and appended to body');
 
     const cleanup = () => {
-        console.log('[PostActionItemMenuItem] Cleaning up modal');
         ReactDOM.unmountComponentAtNode(modalContainer);
         if (modalContainer.parentNode) {
             modalContainer.parentNode.removeChild(modalContainer);
@@ -71,7 +67,6 @@ const showCreateModal = (postId: string, channelId: string) => {
     );
 
     currentModal = {element: modalContainer, cleanup};
-    console.log('[PostActionItemMenuItem] Modal rendered');
 };
 
 /**
@@ -80,8 +75,6 @@ const showCreateModal = (postId: string, channelId: string) => {
  */
 const PostActionItemMenuItem: React.FC<Props> = ({postId, channelId, onClose}) => {
     const handleClick = () => {
-        console.log('[PostActionItemMenuItem] Clicked for post:', postId);
-        
         // Open the modal using the global function
         showCreateModal(postId, channelId);
         

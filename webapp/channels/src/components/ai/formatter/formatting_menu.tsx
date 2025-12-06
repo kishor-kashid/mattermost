@@ -27,15 +27,6 @@ const FormattingMenu: React.FC<Props> = ({message, onFormat, onShowPreview, disa
     const [showMenu, setShowMenu] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
 
-    // Debug logging
-    console.log('[FormattingMenu] State:', {
-        disabled,
-        formatting,
-        profilesCount: profiles.length,
-        messageLength: message.length,
-        messageTrimmed: message.trim().length,
-    });
-
     useEffect(() => {
         // Always try to load profiles on mount
         if (profiles.length === 0 && !formatting) {
@@ -61,8 +52,11 @@ const FormattingMenu: React.FC<Props> = ({message, onFormat, onShowPreview, disa
     return (
         <div className='ai-formatting-menu-container'>
             <button
+                type='button'
                 className='ai-formatting-button'
-                onClick={() => {
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     // Load profiles if not loaded yet
                     if (profiles.length === 0) {
                         dispatch(getFormattingProfiles());

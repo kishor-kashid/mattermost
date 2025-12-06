@@ -284,3 +284,62 @@ mattermost/
   - Icon highlights when RHS state matches (`rhsState === RHSStates.ACTION_ITEMS`)
 - **Benefits**: Immediate visual access without menu navigation
 
+**RHS Panel State Pattern (Critical!):**
+- **Pattern**: When adding new RHS panel types, must update TWO files for `searchVisible`
+- **Problem**: The `Search` component wraps RHS content and has its own Redux connection
+- **Files to Update**:
+  1. `webapp/channels/src/components/sidebar_right/index.ts` - Add to `searchVisible` exclusion
+  2. `webapp/channels/src/components/search/index.tsx` - Add to `searchVisible` exclusion
+- **Implementation**:
+  ```typescript
+  // In sidebar_right/index.ts
+  searchVisible: Boolean(rhsState) && rhsState !== RHSStates.PLUGIN && rhsState !== RHSStates.ACTION_ITEMS,
+  
+  // In search/index.tsx
+  searchVisible: rhsState !== null && (![
+      RHSStates.PLUGIN,
+      RHSStates.CHANNEL_INFO,
+      RHSStates.CHANNEL_MEMBERS,
+      RHSStates.EDIT_HISTORY,
+      RHSStates.ACTION_ITEMS,  // Must add new RHS states here!
+  ].includes(rhsState)),
+  ```
+- **Why**: The Search component checks `searchVisible` and shows SearchResults instead of `children` when true
+- **Symptom**: New RHS panel shows Search UI instead of your custom content
+
+**Form Button Pattern:**
+- **Pattern**: Always use `type='button'` for buttons that shouldn't submit forms
+- **Problem**: Buttons without explicit type default to `type='submit'` inside forms
+- **Solution**:
+  ```tsx
+  <button
+      type='button'  // Prevents form submission
+      onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // handler logic
+      }}
+  >
+  ```
+- **When to Use**: Any button inside a form that should NOT submit (menus, toggles, etc.)
+
+**Redux State Path Pattern:**
+- **Pattern**: AI reducers are at `state.ai`, NOT `state.entities.ai`
+- **Mattermost Redux Structure**:
+  ```
+  state
+  ├── entities/     # mattermost-redux entities (users, channels, posts, teams)
+  ├── views/        # UI state (modals, selections)
+  ├── plugins/      # Plugin state
+  ├── storage/      # Persistent storage
+  └── ai/           # Our AI feature state (custom reducers)
+  ```
+- **Correct Selector**:
+  ```typescript
+  const getAIState = (state: GlobalState) => state.ai;
+  ```
+- **Wrong** (common mistake):
+  ```typescript
+  const getAIState = (state: GlobalState) => state.entities.ai;  // entities is mattermost-redux
+  ```
+

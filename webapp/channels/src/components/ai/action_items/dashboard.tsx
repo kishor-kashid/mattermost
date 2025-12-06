@@ -30,29 +30,9 @@ const ActionItemsDashboard: React.FC = () => {
     const allItems = useSelector((state: GlobalState) => state.ai.actionItems.items);
     const allItemsArray = Object.values(allItems);
 
-    console.log('[ActionItemsDashboard] Rendering:', {
-        overdueCount: overdueItems.length,
-        dueSoonCount: dueSoonItems.length,
-        activeCount: activeItems.length,
-        completedCount: completedItems.length,
-        totalItems: Object.keys(allItems).length,
-        allItemsArray: allItemsArray.length,
-        loading,
-        firstItem: allItemsArray[0],
-    });
-
     useEffect(() => {
-        console.log('[ActionItemsDashboard] Component mounted - fetching action items');
-        console.log('[ActionItemsDashboard] showCompleted:', showCompleted);
-        console.log('[ActionItemsDashboard] Current items in Redux before fetch:', Object.keys(allItems).length);
         dispatch(getActionItems({includeCompleted: showCompleted}));
     }, [dispatch, showCompleted]);
-
-    // Log whenever allItems changes
-    useEffect(() => {
-        console.log('[ActionItemsDashboard] allItems changed:', allItems);
-        console.log('[ActionItemsDashboard] allItemsArray:', allItemsArray);
-    }, [allItems, allItemsArray]);
 
     const handleComplete = (itemId: string) => {
         dispatch(completeActionItem(itemId));
@@ -66,12 +46,9 @@ const ActionItemsDashboard: React.FC = () => {
 
     const handleEdit = (item: AIActionItem) => {
         // TODO: Implement edit modal
-        console.log('Edit item:', item);
     };
 
     const renderActionItems = (items: AIActionItem[], title: string, icon: string) => {
-        console.log(`[renderActionItems] ${title}:`, items.length, items);
-        
         if (items.length === 0) {
             return null;
         }
@@ -142,27 +119,6 @@ const ActionItemsDashboard: React.FC = () => {
                 </div>
             ) : (
                 <div className='dashboard-content'>
-                    {/* Debug info - ALWAYS show during debugging */}
-                    <div style={{padding: '10px', background: '#fffbe6', border: '1px solid #ffe58f', marginBottom: '10px', fontSize: '12px', borderRadius: '4px'}}>
-                        <strong>🔍 Debug Info:</strong>
-                        <div>Total items in Redux: <strong>{allItemsArray.length}</strong></div>
-                        <div>Redux items object keys: {Object.keys(allItems).length}</div>
-                        <div>Overdue: {overdueItems.length}</div>
-                        <div>Due Soon: {dueSoonItems.length}</div>
-                        <div>Active: {activeItems.length}</div>
-                        <div>Completed: {completedItems.length}</div>
-                        {allItemsArray.length > 0 ? (
-                            <>
-                                <div>First item ID: {allItemsArray[0]?.id}</div>
-                                <div>First item status: {allItemsArray[0]?.status}</div>
-                                <div>First item description: {allItemsArray[0]?.description?.substring(0, 50)}...</div>
-                                <div>First item assignee_id: {allItemsArray[0]?.assignee_id}</div>
-                                <div>First item created_by: {allItemsArray[0]?.created_by}</div>
-                            </>
-                        ) : (
-                            <div style={{color: 'red'}}>⚠️ No items in Redux state!</div>
-                        )}
-                    </div>
                     
                     {renderActionItems(overdueItems, 'Overdue', '🔴')}
                     {renderActionItems(dueSoonItems, 'Due Soon', '⏰')}

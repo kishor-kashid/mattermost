@@ -28,8 +28,6 @@ const CreateActionItemModal: React.FC<Props> = ({onClose, channelId, postId}) =>
     const currentChannelId = useSelector(getCurrentChannelId);
     const defaultChannelId = channelId || currentChannelId;
 
-    console.log('[CreateActionItemModal] Rendering modal', {channelId, postId, defaultChannelId});
-
     const [description, setDescription] = useState('');
     const [dueDate, setDueDate] = useState<Date | null>(null);
     const [priority, setPriority] = useState<AIActionItemPriority>('medium');
@@ -40,22 +38,12 @@ const CreateActionItemModal: React.FC<Props> = ({onClose, channelId, postId}) =>
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('[CreateActionItemModal] handleSubmit called');
 
         if (!description.trim()) {
-            console.log('[CreateActionItemModal] Description is empty, aborting');
             return;
         }
 
         setSubmitting(true);
-        console.log('[CreateActionItemModal] Creating action item with data:', {
-            description: description.trim(),
-            assignee_id: assigneeId,
-            channel_id: defaultChannelId,
-            post_id: postId,
-            priority,
-            due_date: dueDate,
-        });
 
         const request: ActionItemCreateRequest = {
             description: description.trim(),
@@ -68,22 +56,14 @@ const CreateActionItemModal: React.FC<Props> = ({onClose, channelId, postId}) =>
 
         try {
             const result = await dispatch(createActionItem(request));
-            console.log('[CreateActionItemModal] API result:', result);
-            
             setSubmitting(false);
 
             if ('data' in result) {
-                console.log('[CreateActionItemModal] Action item created successfully:', result.data);
-                
                 // Refresh the action items list to show the new item
                 dispatch(getActionItems({}));
-                
                 onClose();
-            } else {
-                console.error('[CreateActionItemModal] Failed to create action item:', result);
             }
         } catch (error) {
-            console.error('[CreateActionItemModal] Error creating action item:', error);
             setSubmitting(false);
         }
     };

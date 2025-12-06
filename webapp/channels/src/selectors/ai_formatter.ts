@@ -3,9 +3,9 @@
 
 import {createSelector} from 'mattermost-redux/selectors/create_selector';
 
-import type {GlobalState} from '@mattermost/types/store';
+import type {GlobalState} from 'types/store';
 
-const getAIState = (state: GlobalState) => state.entities.ai;
+const getAIState = (state: GlobalState) => state.ai;
 
 export const getFormatterState = createSelector(
     'getFormatterState',

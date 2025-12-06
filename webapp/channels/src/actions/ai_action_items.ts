@@ -10,13 +10,10 @@ import type {AIActionItem, ActionItemCreateRequest, ActionItemUpdateRequest, Act
 
 export function getActionItems(filters?: ActionItemFilters): ActionFunc {
     return async (dispatch) => {
-        console.log('[getActionItems] Called with filters:', filters);
         dispatch({type: AIActionItemsTypes.GET_ACTION_ITEMS_REQUEST});
 
         try {
-            console.log('[getActionItems] Calling aiClient.getActionItems...');
             const items = await aiClient.getActionItems(filters);
-            console.log('[getActionItems] Received items:', items);
 
             dispatch({
                 type: AIActionItemsTypes.GET_ACTION_ITEMS_SUCCESS,
@@ -25,7 +22,6 @@ export function getActionItems(filters?: ActionItemFilters): ActionFunc {
 
             return {data: items};
         } catch (error) {
-            console.error('[getActionItems] Error:', error);
             dispatch({
                 type: AIActionItemsTypes.GET_ACTION_ITEMS_FAILURE,
                 error,
