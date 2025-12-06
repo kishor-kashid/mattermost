@@ -89,6 +89,13 @@ func getActionItems(c *Context, w http.ResponseWriter, r *http.Request) {
 		perPage = 60
 	}
 
+	c.Logger.Debug("getActionItems API called",
+		mlog.String("user_id_param", userID),
+		mlog.String("channel_id_param", channelID),
+		mlog.String("session_user_id", c.AppContext.Session().UserId),
+		mlog.Bool("include_completed", includeCompleted),
+	)
+
 	filters := &app.ActionItemFilters{
 		Status:           status,
 		Priority:         priority,
@@ -108,15 +115,33 @@ func getActionItems(c *Context, w http.ResponseWriter, r *http.Request) {
 	// Determine which items to fetch
 	if channelID != "" {
 		// Get items for a specific channel
+		c.Logger.Debug("Fetching action items for channel", mlog.String("channel_id", channelID))
 		items, err = c.App.GetActionItemsForChannel(c.AppContext, channelID, c.AppContext.Session().UserId, filters)
 	} else {
 		// Get items for a user
+		c.Logger.Debug("Fetching action items for user", mlog.String("user_id", userID))
 		items, err = c.App.GetActionItemsForUser(c.AppContext, userID, filters)
 	}
 
 	if err != nil {
+		c.Logger.Error("Error fetching action items", mlog.Err(err))
 		c.Err = model.NewAppError("getActionItems", "api.action_item.list.app_error", nil, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	c.Logger.Debug("Action items retrieved",
+		mlog.Int("count", len(items)),
+	)
+
+	// Log first item for debugging
+	if len(items) > 0 {
+		c.Logger.Debug("First action item",
+			mlog.String("id", items[0].Id),
+			mlog.String("description", items[0].Description),
+			mlog.String("status", items[0].Status),
+			mlog.String("assignee_id", items[0].AssigneeId),
+			mlog.String("created_by", items[0].CreatedBy),
+		)
 	}
 
 	if err := json.NewEncoder(w).Encode(items); err != nil {

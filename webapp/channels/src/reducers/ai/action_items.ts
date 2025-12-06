@@ -30,11 +30,26 @@ export default function actionItemsReducer(state = initialState, action: AnyActi
 
     case AIActionItemsTypes.GET_ACTION_ITEMS_SUCCESS: {
         const items: AIActionItem[] = action.data;
+        console.log('[actionItemsReducer] GET_ACTION_ITEMS_SUCCESS received items:', items);
+        console.log('[actionItemsReducer] Items count:', items?.length);
+        
         const itemsById: Record<string, AIActionItem> = {};
         
-        items.forEach((item) => {
-            itemsById[item.id] = item;
-        });
+        if (Array.isArray(items)) {
+            items.forEach((item, index) => {
+                console.log(`[actionItemsReducer] Processing item ${index}:`, item);
+                if (item && item.id) {
+                    itemsById[item.id] = item;
+                } else {
+                    console.warn(`[actionItemsReducer] Invalid item at index ${index}:`, item);
+                }
+            });
+        } else {
+            console.error('[actionItemsReducer] Received non-array data:', action.data);
+        }
+
+        console.log('[actionItemsReducer] Items by ID:', itemsById);
+        console.log('[actionItemsReducer] Total items stored:', Object.keys(itemsById).length);
 
         return {
             ...state,

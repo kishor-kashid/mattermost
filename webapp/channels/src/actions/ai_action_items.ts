@@ -1,19 +1,22 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {Client4} from 'mattermost-redux/client';
 import {ActionFunc} from 'mattermost-redux/types/actions';
 
+import {aiClient} from 'client/ai';
 import {AIActionItemsTypes} from 'utils/constants/ai';
 
 import type {AIActionItem, ActionItemCreateRequest, ActionItemUpdateRequest, ActionItemFilters, ActionItemStats} from 'types/ai';
 
 export function getActionItems(filters?: ActionItemFilters): ActionFunc {
     return async (dispatch) => {
+        console.log('[getActionItems] Called with filters:', filters);
         dispatch({type: AIActionItemsTypes.GET_ACTION_ITEMS_REQUEST});
 
         try {
-            const items = await Client4.getActionItems(filters);
+            console.log('[getActionItems] Calling aiClient.getActionItems...');
+            const items = await aiClient.getActionItems(filters);
+            console.log('[getActionItems] Received items:', items);
 
             dispatch({
                 type: AIActionItemsTypes.GET_ACTION_ITEMS_SUCCESS,
@@ -22,6 +25,7 @@ export function getActionItems(filters?: ActionItemFilters): ActionFunc {
 
             return {data: items};
         } catch (error) {
+            console.error('[getActionItems] Error:', error);
             dispatch({
                 type: AIActionItemsTypes.GET_ACTION_ITEMS_FAILURE,
                 error,
@@ -37,7 +41,7 @@ export function getActionItem(actionItemId: string): ActionFunc {
         dispatch({type: AIActionItemsTypes.GET_ACTION_ITEM_REQUEST});
 
         try {
-            const item = await Client4.getActionItem(actionItemId);
+            const item = await aiClient.getActionItem(actionItemId);
 
             dispatch({
                 type: AIActionItemsTypes.GET_ACTION_ITEM_SUCCESS,
@@ -61,7 +65,7 @@ export function createActionItem(request: ActionItemCreateRequest): ActionFunc {
         dispatch({type: AIActionItemsTypes.CREATE_ACTION_ITEM_REQUEST});
 
         try {
-            const item = await Client4.createActionItem(request);
+            const item = await aiClient.createActionItem(request);
 
             dispatch({
                 type: AIActionItemsTypes.CREATE_ACTION_ITEM_SUCCESS,
@@ -85,7 +89,7 @@ export function updateActionItem(actionItemId: string, request: ActionItemUpdate
         dispatch({type: AIActionItemsTypes.UPDATE_ACTION_ITEM_REQUEST});
 
         try {
-            const item = await Client4.updateActionItem(actionItemId, request);
+            const item = await aiClient.updateActionItem(actionItemId, request);
 
             dispatch({
                 type: AIActionItemsTypes.UPDATE_ACTION_ITEM_SUCCESS,
@@ -113,7 +117,7 @@ export function completeActionItem(actionItemId: string): ActionFunc {
         });
 
         try {
-            const item = await Client4.completeActionItem(actionItemId);
+            const item = await aiClient.completeActionItem(actionItemId);
 
             dispatch({
                 type: AIActionItemsTypes.COMPLETE_ACTION_ITEM_SUCCESS,
@@ -141,7 +145,7 @@ export function deleteActionItem(actionItemId: string): ActionFunc {
         });
 
         try {
-            await Client4.deleteActionItem(actionItemId);
+            await aiClient.deleteActionItem(actionItemId);
 
             dispatch({
                 type: AIActionItemsTypes.DELETE_ACTION_ITEM_SUCCESS,
@@ -166,7 +170,7 @@ export function getActionItemStats(userId?: string): ActionFunc {
         dispatch({type: AIActionItemsTypes.GET_ACTION_ITEM_STATS_REQUEST});
 
         try {
-            const stats = await Client4.getActionItemStats(userId);
+            const stats = await aiClient.getActionItemStats(userId);
 
             dispatch({
                 type: AIActionItemsTypes.GET_ACTION_ITEM_STATS_SUCCESS,

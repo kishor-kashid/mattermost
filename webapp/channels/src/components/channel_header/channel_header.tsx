@@ -95,6 +95,14 @@ class ChannelHeader extends React.PureComponent<Props> {
         }
     };
 
+    showActionItems = () => {
+        if (this.props.rhsState === RHSStates.ACTION_ITEMS) {
+            this.props.actions.closeRightHandSide();
+        } else if (this.props.channel) {
+            this.props.actions.openRHSForActionItems(this.props.channel.id);
+        }
+    };
+
     toggleChannelMembersRHS = () => {
         if (this.props.rhsState === RHSStates.CHANNEL_MEMBERS) {
             this.props.actions.closeRightHandSide();
@@ -225,6 +233,12 @@ class ChannelHeader extends React.PureComponent<Props> {
             'channel-header__icon--active': rhsState === RHSStates.CHANNEL_FILES,
         });
         const channelFilesIcon = <i className='icon icon-file-text-outline'/>;
+        
+        const actionItemsIconClass = classNames('channel-header__icon channel-header__icon--left btn btn-icon btn-xs ', {
+            'channel-header__icon--active': rhsState === RHSStates.ACTION_ITEMS,
+        });
+        const actionItemsIcon = <i className='icon icon-check-circle-outline'/>;
+        
         const pinnedIconClass = classNames('channel-header__icon channel-header__icon--wide channel-header__icon--left btn btn-icon btn-xs', {
             'channel-header__icon--active': rhsState === RHSStates.PIN,
         });
@@ -372,6 +386,14 @@ class ChannelHeader extends React.PureComponent<Props> {
                                             {channelFilesIcon}
                                         </HeaderIconWrapper>
                                     }
+                                    <HeaderIconWrapper
+                                        buttonClass={actionItemsIconClass}
+                                        buttonId={'channelHeaderActionItemsButton'}
+                                        onClick={this.showActionItems}
+                                        tooltip={this.props.intl.formatMessage({id: 'channel_header.actionItems', defaultMessage: 'Action Items'})}
+                                    >
+                                        {actionItemsIcon}
+                                    </HeaderIconWrapper>
                                 </div>
                                 <div
                                     id='channelHeaderDescription'

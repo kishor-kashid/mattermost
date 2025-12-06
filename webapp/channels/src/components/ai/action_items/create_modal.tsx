@@ -8,7 +8,7 @@ import {FormattedMessage} from 'react-intl';
 import type {ActionItemCreateRequest, AIActionItemPriority, AIActionItemStatus} from 'types/ai';
 import type {GlobalState} from 'types/store';
 
-import {createActionItem} from 'actions/ai_action_items';
+import {createActionItem, getActionItems} from 'actions/ai_action_items';
 import {getCurrentChannelId} from 'mattermost-redux/selectors/entities/channels';
 import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
 
@@ -28,20 +28,34 @@ const CreateActionItemModal: React.FC<Props> = ({onClose, channelId, postId}) =>
     const currentChannelId = useSelector(getCurrentChannelId);
     const defaultChannelId = channelId || currentChannelId;
 
+    console.log('[CreateActionItemModal] Rendering modal', {channelId, postId, defaultChannelId});
+
     const [description, setDescription] = useState('');
-    const [assigneeId, setAssigneeId] = useState(currentUserId);
     const [dueDate, setDueDate] = useState<Date | null>(null);
     const [priority, setPriority] = useState<AIActionItemPriority>('medium');
     const [submitting, setSubmitting] = useState(false);
+    
+    // Always assign to current user
+    const assigneeId = currentUserId;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('[CreateActionItemModal] handleSubmit called');
 
         if (!description.trim()) {
+            console.log('[CreateActionItemModal] Description is empty, aborting');
             return;
         }
 
         setSubmitting(true);
+        console.log('[CreateActionItemModal] Creating action item with data:', {
+            description: description.trim(),
+            assignee_id: assigneeId,
+            channel_id: defaultChannelId,
+            post_id: postId,
+            priority,
+            due_date: dueDate,
+        });
 
         const request: ActionItemCreateRequest = {
             description: description.trim(),
@@ -52,12 +66,25 @@ const CreateActionItemModal: React.FC<Props> = ({onClose, channelId, postId}) =>
             due_date: dueDate || undefined,
         };
 
-        const result = await dispatch(createActionItem(request));
-        
-        setSubmitting(false);
+        try {
+            const result = await dispatch(createActionItem(request));
+            console.log('[CreateActionItemModal] API result:', result);
+            
+            setSubmitting(false);
 
-        if ('data' in result) {
-            onClose();
+            if ('data' in result) {
+                console.log('[CreateActionItemModal] Action item created successfully:', result.data);
+                
+                // Refresh the action items list to show the new item
+                dispatch(getActionItems({}));
+                
+                onClose();
+            } else {
+                console.error('[CreateActionItemModal] Failed to create action item:', result);
+            }
+        } catch (error) {
+            console.error('[CreateActionItemModal] Error creating action item:', error);
+            setSubmitting(false);
         }
     };
 
@@ -108,28 +135,7 @@ const CreateActionItemModal: React.FC<Props> = ({onClose, channelId, postId}) =>
                         />
                     </div>
 
-                    <div className='form-group'>
-                        <label htmlFor='assignee'>
-                            <FormattedMessage
-                                id='action_items.create_modal.assignee'
-                                defaultMessage='Assignee'
-                            />
-                        </label>
-                        <input
-                            id='assignee'
-                            type='text'
-                            className='form-control'
-                            value={assigneeId}
-                            onChange={(e) => setAssigneeId(e.target.value)}
-                            placeholder='User ID'
-                        />
-                        <small className='form-text'>
-                            <FormattedMessage
-                                id='action_items.create_modal.assignee_hint'
-                                defaultMessage='Enter user ID (defaults to you)'
-                            />
-                        </small>
-                    </div>
+                    {/* Assignee is automatically set to current user */}
 
                     <div className='form-row'>
                         <div className='form-group flex-1'>

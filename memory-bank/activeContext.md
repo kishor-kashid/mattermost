@@ -1,9 +1,14 @@
 # Active Context
 
 ## Current Work Focus
-**PR #6 - Channel Analytics Dashboard (Next Focus)**
+**PR #4 (Action Items) - Final UI Polish & Testing**
 
-PR #5 (Message Formatting Assistant) is fully implemented and verified end-to-end in the UI. The formatting button (robot icon) now appears correctly in the composer toolbar when AI formatting is enabled, and the preview modal works as designed. The current focus is shifting to **PR #6 - Channel Analytics Dashboard** while keeping an eye on any regressions in the Messaging Formatting Assistant.
+PR #5 (Message Formatting Assistant) is fully implemented and verified end-to-end in the UI. PR #4 (Action Item Extractor) backend and frontend are complete, but discovered UI accessibility issues during testing:
+- **Issue**: "View Action Items" menu item in channel header dropdown wasn't easily discoverable
+- **Solution**: Added dedicated Action Items button (✓ icon) to channel header for immediate access
+- **Status**: Testing new UI integration, enhanced dashboard with debug info
+
+Once Action Items UI is verified working, will shift focus to **PR #6 - Channel Analytics Dashboard**.
 
 PR #5 (Message Formatting Assistant) implementation is complete - all 13 tasks done:
 - ✅ Formatter service (backend)
@@ -24,25 +29,29 @@ PR #5 (Message Formatting Assistant) implementation is complete - all 13 tasks d
 
 Next: Begin PR #6 - Channel Analytics Dashboard feature, then PR #7 - Testing, Documentation & Polish.
 
-## Recent Changes
+## Recent Changes (Dec 6, 2024 Session)
+- ✅ **Action Items Creation Working**: Modal, API, Redux all functional
+- ✅ **Debugged Display Issue**: Items created but not showing in dashboard
+- 🔧 **Enhanced Dashboard Debug**: Added comprehensive logging and debug info panel
+  - Shows total items, categorization counts, first item details
+  - Added "All Items (Uncategorized)" fallback section
+  - Console logging in selectors and dashboard rendering
+- ✅ **Improved UI Accessibility**: Added Action Items button to channel header
+  - Checkmark icon (✓) next to Files button in channel header
+  - Direct access without navigating dropdown menu
+  - Wired into Redux (openRHSForActionItems action)
+  - Opens RHS panel with dashboard
+- 🔧 **Enhanced Selectors**: Added logging to `getActiveActionItems` selector
+- ⏳ **Testing**: Waiting for user to test new button and verify items display
+
+## Previous Session Changes
 - ✅ Created Memory Bank documentation structure
 - ✅ Indexed and analyzed the Mattermost codebase
-- ✅ Identified key components and architecture patterns
 - ✅ User successfully set up local Mattermost development environment
-- ✅ Created comprehensive PRD (Product Requirements Document)
-- ✅ Created detailed task list with 7 PRs mapped out
-- ✅ **Scope Refinement**: Removed Smart Notifications (too complex)
-- ✅ **Scope Refinement**: Removed Scheduled Messages (already exists in Mattermost)
-- ✅ **Added**: Action Item Extractor feature
-- ✅ **Added**: Message Formatting Assistant feature
-- ✅ **Configured**: Message limits (500 max, configurable)
 - ✅ **ARCHITECTURE SHIFT**: Changed from plugin to native feature integration
-- ✅ **Updated PRD**: Reflects native integration (database tables, api4 endpoints, Redux integration)
-- ✅ **Updated Task List**: All 7 PRs rewritten for core Mattermost integration
 - ✅ **Database Design**: Created schema for AIActionItems, AISummaries, AIAnalytics, AIPreferences tables
-- ✅ **API Design**: Changed endpoints from `/plugins/ai-suite/*` to `/api/v4/ai/*`
-- ✅ **Memory Bank Updated**: All documentation reflects brownfield development approach
-- ✅ **PR #1 COMPLETED**: Core infrastructure fully implemented (Dec 4, 2024)
+- ✅ **API Design**: Endpoints at `/api/v4/ai/*`
+- ✅ **PR #1-5 COMPLETED**: Core infrastructure through Message Formatting Assistant (Dec 4-5, 2024)
   - Configuration schema (AISettings) added to config.go
   - 4 database migration pairs created (8 files total)
   - Model definitions for all 4 AI data types
@@ -169,10 +178,34 @@ Next: Begin PR #6 - Channel Analytics Dashboard feature, then PR #7 - Testing, D
     - ✅ Composer integration (use_formatter hook, formatting button in toolbar)
     - ✅ All styling complete
     - ✅ Zero compilation and linting errors
-11. ⏳ **PR #6**: Channel Analytics Dashboard feature
-12. ⏳ **PR #7**: Testing, documentation, and polish
+11. 🔧 **PR #4 UI Polish** (Dec 6, 2024 - Current Session)
+    - ✅ Fixed action item creation (removed assignee field requirement)
+    - ✅ Backend JSON tags added for proper field mapping
+    - 🔧 Enhanced dashboard with debug info and fallback rendering
+    - ✅ Added Action Items button to channel header for easy access
+    - 🔧 Added comprehensive debug logging to selectors and components
+    - ⏳ Testing new UI integration and item display
+12. ⏳ **PR #6**: Channel Analytics Dashboard feature
+13. ⏳ **PR #7**: Testing, documentation, and polish
 
 ## Active Decisions and Considerations
+
+### Current Session Decisions (Dec 6, 2024)
+
+1. **Action Items UI Accessibility**
+   - **Decision**: Add dedicated button to channel header instead of relying only on dropdown menu
+   - **Rationale**: Dropdown menu item exists but isn't easily discoverable; button provides immediate visual access
+   - **Implementation**: Checkmark icon (✓) next to Files button, opens RHS panel
+   
+2. **Dashboard Debugging Strategy**
+   - **Decision**: Add comprehensive debug info panel and fallback rendering
+   - **Rationale**: Items exist in Redux but not displaying; need visibility into categorization logic
+   - **Implementation**: Debug panel shows counts, "All Items (Uncategorized)" fallback section
+   
+3. **Selector Logging**
+   - **Decision**: Add console.log to selectors during debugging
+   - **Rationale**: Need to trace how items are being filtered
+   - **Implementation**: Logging in `getActiveActionItems` and dashboard `renderActionItems`
 
 ### Native Feature Integration Approach
 - **Development Type**: Brownfield Development (extending existing codebase)

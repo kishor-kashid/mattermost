@@ -51,22 +51,22 @@ type ActionItemBatch struct {
 
 // ActionItemCreateRequest represents a request to create an action item
 type ActionItemCreateRequest struct {
-	Description string
-	AssigneeID  string
-	ChannelID   string
-	PostID      string
-	DueDate     *time.Time
-	Priority    string
-	Status      string
+	Description string     `json:"description"`
+	AssigneeID  string     `json:"assignee_id"`
+	ChannelID   string     `json:"channel_id"`
+	PostID      string     `json:"post_id"`
+	DueDate     *time.Time `json:"due_date"`
+	Priority    string     `json:"priority"`
+	Status      string     `json:"status"`
 }
 
 // ActionItemUpdateRequest represents a request to update an action item
 type ActionItemUpdateRequest struct {
-	Description *string
-	AssigneeID  *string
-	DueDate     *time.Time
-	Priority    *string
-	Status      *string
-	CompletedAt *time.Time
+	Description *string    `json:"description,omitempty"`
+	AssigneeID  *string    `json:"assignee_id,omitempty"`
+	DueDate     *time.Time `json:"due_date,omitempty"`
+	Priority    *string    `json:"priority,omitempty"`
+	Status      *string    `json:"status,omitempty"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
 }
 

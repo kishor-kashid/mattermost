@@ -49,7 +49,11 @@ export const getActiveActionItems = createSelector(
     'getActiveActionItems',
     getActionItemsArray,
     (items) => {
-        return items.filter((item) => item.status !== 'completed' && item.status !== 'dismissed');
+        console.log('[getActiveActionItems] Total items:', items.length);
+        console.log('[getActiveActionItems] First item:', items[0]);
+        const active = items.filter((item) => item.status !== 'completed' && item.status !== 'dismissed');
+        console.log('[getActiveActionItems] Active items after filter:', active.length);
+        return active;
     },
 );
 

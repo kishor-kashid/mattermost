@@ -3,7 +3,7 @@
 
 import type {AIActionItem, AIAnalytics, AIPreferences, AISummary, FormatMessageRequest, FormatMessageResponse, FormattingProfileInfo, SummarizeRequest} from 'types/ai';
 
-import {Client4} from '@mattermost/client';
+import {Client4} from 'mattermost-redux/client';
 
 // AI Client for making API calls to AI endpoints
 export class AIClient {
@@ -124,10 +124,15 @@ export class AIClient {
         }
         
         const queryString = params.toString();
-        return Client4.doFetch(
-            `${this.baseRoute}/actionitems${queryString ? '?' + queryString : ''}`,
-            {method: 'get'},
-        );
+        const url = `${this.baseRoute}/actionitems${queryString ? '?' + queryString : ''}`;
+        console.log('[aiClient.getActionItems] Fetching from URL:', url);
+        
+        const response = await Client4.doFetch(url, {method: 'get'});
+        console.log('[aiClient.getActionItems] Raw response:', response);
+        console.log('[aiClient.getActionItems] Response type:', typeof response);
+        console.log('[aiClient.getActionItems] Is array:', Array.isArray(response));
+        
+        return response;
     }
 
     async getActionItemsByChannel(channelId: string, page = 0, perPage = 60): Promise<AIActionItem[]> {

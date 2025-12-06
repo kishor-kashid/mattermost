@@ -4,8 +4,6 @@
 import type {DispatchFunc, GetStateFunc} from '@mattermost/types/actions';
 import type {FormatMessageRequest, FormatMessageResponse, FormattingProfileInfo} from 'types/ai';
 
-import {Client4} from '@mattermost/client';
-
 import {aiClient} from 'client/ai';
 
 import AIActionTypes from 'utils/constants/ai';

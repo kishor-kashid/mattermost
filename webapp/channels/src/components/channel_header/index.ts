@@ -36,6 +36,7 @@ import {
     showChannelFiles,
     closeRightHandSide,
     showChannelMembers,
+    openRHSForActionItems,
 } from 'actions/views/rhs';
 import {getRhsState} from 'selectors/rhs';
 import {makeGetCustomStatus, isCustomStatusEnabled, isCustomStatusExpired} from 'selectors/views/custom_status';
@@ -119,6 +120,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
         updateChannelNotifyProps,
         showChannelMembers,
         fetchChannelRemotes,
+        openRHSForActionItems,
     }, dispatch),
 });
 

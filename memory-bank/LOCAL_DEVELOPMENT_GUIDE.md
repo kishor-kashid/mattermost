@@ -252,6 +252,48 @@ make test
 
 ## Development Workflow
 
+### Frontend Run Modes
+
+There are **two ways** the frontend can be served during development:
+
+1. **Dev Server (auto-rebuild, no manual build)**  
+   - Backend:  
+     ```powershell
+     cd server
+     make run-server
+     ```
+   - Frontend (in a **separate terminal**):  
+     ```powershell
+     cd webapp
+     npm run dev           # runs dev-server for channels
+     ```
+   - Behavior:
+     - Webpack dev-server serves the Channels webapp directly from `webapp/channels/src/**`.
+     - It watches files and **rebuilds automatically** on every save.
+     - You access the UI at the **dev-server URL** shown in the terminal (e.g. `http://localhost:9005`).
+     - No `npm run build` or copy to `server/client` needed while you’re developing.
+
+2. **Server-Only Static Mode (production-like)**  
+   - Backend only:  
+     ```powershell
+     cd server
+     make run-server
+     ```
+   - The Go server serves static assets from `server/client` (which must contain a built bundle from `webapp/channels/dist`).  
+   - Use this mode after you:
+     ```powershell
+     cd webapp
+     npm run build --workspace=channels
+     cd ..
+     Remove-Item -Recurse -Force .\server\client\*
+     Copy-Item -Recurse -Force .\webapp\channels\dist\* .\server\client\
+     ```
+   - Then access the app at `http://localhost:8065`.
+
+**Rule of thumb:**  
+- If you’re running **`npm run dev` / `npm run dev-server --workspace=channels`**, your changes in `webapp/channels/src/**` are picked up automatically; just refresh the browser.  
+- If you’re only running **`make run-server`** (no dev server), you must **build once** and copy `webapp/channels/dist` into `server/client` for changes to appear.
+
 ### Making Changes
 
 1. **Backend (Go) changes**:

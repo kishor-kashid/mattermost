@@ -225,3 +225,62 @@ mattermost/
 6. Redux actions update analytics state
 7. Charts re-render with new data
 
+**Action Items Creation Flow (with Global Modal):**
+1. User clicks "Create Action Item" from post menu
+2. PostActionItemMenuItem calls global `showCreateModal()` function
+3. Global function creates container div, appends to document.body
+4. Modal rendered via `ReactDOM.render()` with Provider + IntlProvider wrappers
+5. Modal independent of menu component lifecycle (persists after menu closes)
+6. User fills form → Submit → `dispatch(createActionItem(request))`
+7. API call → `/api/v4/ai/actionitems` → Backend validation and save
+8. Success → `dispatch(getActionItems({}))` to refresh list
+9. Modal cleanup via global cleanup function
+
+### UI Patterns Implemented
+
+**Global Modal Manager Pattern:**
+- **Problem**: Modals triggered from dropdown menus disappear when parent unmounts
+- **Solution**: Render modal directly to `document.body` using `ReactDOM.render()`
+- **Implementation**:
+  ```typescript
+  let currentModal: {element: HTMLElement; cleanup: () => void} | null = null;
+  
+  const showCreateModal = (postId: string, channelId: string) => {
+      if (currentModal) {
+          currentModal.cleanup();
+      }
+      
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      
+      const cleanup = () => {
+          ReactDOM.unmountComponentAtNode(container);
+          document.body.removeChild(container);
+          currentModal = null;
+      };
+      
+      ReactDOM.render(
+          <Provider store={store}>
+              <IntlProvider>
+                  <CreateActionItemModal onClose={cleanup} />
+              </IntlProvider>
+          </Provider>,
+          container
+      );
+      
+      currentModal = {element: container, cleanup};
+  };
+  ```
+- **Benefits**: Modal lifecycle independent of triggering component
+- **Trade-offs**: Manual context management (Provider, IntlProvider must be wrapped)
+
+**Channel Header Button Pattern:**
+- **Pattern**: Add icon button to channel header for quick access to RHS features
+- **Example**: Action Items button (✓ icon) next to Files button
+- **Implementation**: 
+  - Add icon and class in `channel_header.tsx` render method
+  - Add click handler that dispatches RHS action (`openRHSForActionItems`)
+  - Wire action in Redux connector (`index.ts`)
+  - Icon highlights when RHS state matches (`rhsState === RHSStates.ACTION_ITEMS`)
+- **Benefits**: Immediate visual access without menu navigation
+
