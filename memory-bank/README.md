@@ -1,27 +1,27 @@
 # Memory Bank - Mattermost Project
 
-This directory contains comprehensive documentation about the Mattermost codebase and our **AI Productivity Suite Plugin** development project.
+This directory contains comprehensive documentation about the Mattermost codebase and our **AI Productivity Suite** development project.
 
 ## 🎯 Current Project: AI Productivity Suite (Native Features)
 
-**Status**: PR #5 complete and verified - Moving to PR #6  
+**Status**: PR #6 core functionality complete - All 4 AI features working!  
 **Timeline**: 6-7 days, 87 tasks, 7 PRs  
-**Progress**: 5 of 7 PRs complete (~71%)  
-**Features**: 4 AI-powered productivity enhancements
+**Progress**: 6 of 7 PRs complete (~86%)  
+**Features**: 4 AI-powered productivity enhancements - ALL FUNCTIONAL ✅
 
 ### AI Features
-1. **AI Message Summarization** - GPT-powered summaries (max 500 messages)
-2. **Link & Article Summarizer** - AI summaries of shared URLs and articles
-3. **Action Item Extractor** - Auto-detect and track commitments
-4. **Message Formatting Assistant** - AI grammar and tone improvements
+1. **AI Message Summarization** ✅ - GPT-powered summaries (max 500 messages)
+2. **Link & Article Summarizer** ✅ - AI summaries of shared URLs and articles
+3. **Action Item Extractor** ✅ - Auto-detect and track commitments
+4. **Message Formatting Assistant** ✅ - AI grammar and tone improvements
 
 ### Development Progress
 - [x] **PR #1**: Core Infrastructure (database, store, OpenAI client) ✅ Dec 4
 - [x] **PR #2**: API Foundation (routes, prompts, Redux, UI components) ✅ Dec 5
 - [x] **PR #3**: AI Message Summarization ✅ Dec 5
-- [x] **PR #4**: Action Item Extractor ✅ Dec 5
-- [x] **PR #5**: Message Formatting Assistant ✅ Dec 5 (Complete - all 13 tasks)
-- [ ] PR #6: Link & Article Summarizer
+- [x] **PR #4**: Action Item Extractor ✅ Dec 5-6
+- [x] **PR #5**: Message Formatting Assistant ✅ Dec 5-6
+- [x] **PR #6**: Link & Article Summarizer ✅ Dec 7 (Core working)
 - [ ] PR #7: Testing, Documentation & Polish
 
 📄 **Full Details**: See `mattermost-prd.md` and `mattermost-task-list.md` in project root
@@ -107,6 +107,28 @@ This directory contains comprehensive documentation about the Mattermost codebas
    http://localhost:8065
    ```
 
+### To Test AI Features
+
+1. **Set OpenAI API Key**:
+   ```bash
+   export MM_AISETTINGS_OPENAIAPIKEY="sk-your-key-here"
+   ```
+
+2. **Test Message Summarization**:
+   - Type `/summarize channel` in any channel
+
+3. **Test Link Summarizer**:
+   - Post a URL in a message
+   - Click "Summarize link" button
+
+4. **Test Action Items**:
+   - Click the checkmark icon in channel header
+   - Or post a message like "I'll review this by tomorrow"
+
+5. **Test Message Formatting**:
+   - Type a message in the composer
+   - Click the AI formatting button in toolbar
+
 ## 📖 Reading Order
 
 ### For Complete Understanding
@@ -138,14 +160,17 @@ A: Check `techContext.md`
 **Q: What's the current status?**
 A: See `activeContext.md` and `progress.md`
 
+**Q: How do I test AI features?**
+A: See Quick Start section above
+
 ## 🏗️ Project Structure Summary
 
 ```
 mattermost/
 ├── server/              # Go backend
 │   ├── channels/       # Core functionality
-│   │   ├── api4/      # REST API
-│   │   ├── app/       # Business logic (START HERE for backend)
+│   │   ├── api4/      # REST API (ai_*.go for AI endpoints)
+│   │   ├── app/       # Business logic (ai_*.go for AI services)
 │   │   ├── store/     # Data layer
 │   │   └── wsapi/     # WebSocket API
 │   └── cmd/           # CLI tools
@@ -153,7 +178,10 @@ mattermost/
 ├── webapp/             # React frontend
 │   ├── channels/      # Main web app
 │   │   └── src/
-│   │       └── components/  # React components (START HERE for frontend)
+│   │       ├── components/ai/  # AI UI components
+│   │       ├── actions/        # Redux actions (ai_*.ts)
+│   │       ├── reducers/ai/    # AI reducers
+│   │       └── selectors/      # AI selectors (ai_*.ts)
 │   └── platform/      # Shared libraries
 │
 └── memory-bank/       # This documentation
@@ -187,6 +215,7 @@ cd server && make help
 - **Database Migrations**: 292+ SQL files
 - **API Endpoints**: 148 handlers in api4/
 - **Business Logic**: 441 files in app/
+- **AI Feature Files**: 30+ new files for AI Productivity Suite
 
 ## 🔄 Development Workflow
 
@@ -239,19 +268,21 @@ Start in: `server/channels/app/`
 - `channel.go` - Channel operations
 - `post.go` - Post/message handling
 - `team.go` - Team management
+- `ai_*.go` - AI feature services
 
 ### Frontend Development
 Start in: `webapp/channels/src/components/`
 - Browse component folders
 - Check Redux actions/reducers
 - Review selectors for data access
+- `ai/` folder - AI UI components
 
 ### API Development
 Check: `server/channels/api4/`
 - Each file handles specific API endpoints
 - `api4.go` - Main API initialization
-- `user.go` - User endpoints
-- `channel.go` - Channel endpoints
+- `ai.go` - AI endpoint registration
+- `ai_*.go` - AI feature endpoints
 
 ## 📝 Keep This Updated
 
@@ -275,7 +306,6 @@ If stuck:
 
 ---
 
-**Last Updated**: December 5, 2024  
-**Status**: ✅ PR #5 complete, 3 features fully implemented (Summarization, Action Items, Formatting)  
-**Version**: Updated with AI Productivity Suite native integration project
-
+**Last Updated**: December 7, 2024  
+**Status**: ✅ All 4 AI features functional (Summarization, Action Items, Formatting, Link Summarizer)  
+**Version**: AI Productivity Suite - 86% complete (6/7 PRs done)

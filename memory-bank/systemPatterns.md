@@ -343,3 +343,69 @@ mattermost/
   const getAIState = (state: GlobalState) => state.entities.ai;  // entities is mattermost-redux
   ```
 
+**Go JSON Serialization Pattern:**
+- **Pattern**: Always add JSON tags to Go structs that will be serialized to JSON
+- **Problem**: Go uses PascalCase by default, but frontend expects snake_case
+- **Solution**:
+  ```go
+  // Wrong - Go serializes as {"Title": "...", "Summary": "..."}
+  type LinkSummary struct {
+      Title   string
+      Summary string
+  }
+  
+  // Correct - Serializes as {"title": "...", "summary": "..."}
+  type LinkSummary struct {
+      Title   string   `json:"title,omitempty"`
+      Summary string   `json:"summary"`
+  }
+  ```
+- **Symptom**: Frontend receives data but can't access properties (undefined)
+
+**HTTP Content Fetching Pattern:**
+- **Pattern**: Use realistic browser headers when fetching external URLs
+- **Problem**: Bot User-Agents get blocked (403 Forbidden)
+- **Solution**:
+  ```go
+  // Use realistic Chrome User-Agent
+  req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+  req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+  req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+  
+  // DON'T set Accept-Encoding manually - Go handles gzip automatically
+  // req.Header.Set("Accept-Encoding", "gzip")  // BAD - causes garbled content
+  ```
+- **Why**: Go's default HTTP transport handles gzip compression transparently, but if you set Accept-Encoding manually, Go expects you to decompress yourself
+
+**React/Redux Race Condition Pattern:**
+- **Pattern**: Account for async Redux updates when using local state
+- **Problem**: Local state updates sync, Redux updates async → UI flickers
+- **Solution**:
+  ```tsx
+  const [requested, setRequested] = useState<Set<string>>(new Set());
+  const loading = useSelector(isLinkSummaryLoading);
+  const summary = useSelector(getLinkSummaryForUrl);
+  const error = useSelector(getLinkSummaryError);
+  
+  // Consider loading if Redux says loading OR if we just requested but Redux hasn't updated
+  const effectiveLoading = loading || (requested.has(url) && !summary && !error);
+  ```
+- **Symptom**: Clicking button briefly shows empty state before loading skeleton
+
+**Map Destructuring Pattern:**
+- **Pattern**: Always destructure ALL needed variables from array.map()
+- **Problem**: Variable used in JSX but not destructured → undefined
+- **Solution**:
+  ```tsx
+  // Wrong - error is undefined
+  {summaries.map(({url, summary, loading}) => (
+      {error && <div>{error}</div>}  // error is not defined!
+  ))}
+  
+  // Correct - destructure error too
+  {summaries.map(({url, summary, loading, error}) => (
+      {error && <div>{error}</div>}
+  ))}
+  ```
+- **Symptom**: Condition never evaluates to true even when data exists
+
