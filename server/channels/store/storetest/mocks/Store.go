@@ -100,6 +100,26 @@ func (_m *Store) AISummary() store.AISummaryStore {
 	return r0
 }
 
+// AILinkSummary provides a mock function with no fields
+func (_m *Store) AILinkSummary() store.AILinkSummaryStore {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for AILinkSummary")
+	}
+
+	var r0 store.AILinkSummaryStore
+	if rf, ok := ret.Get(0).(func() store.AILinkSummaryStore); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(store.AILinkSummaryStore)
+		}
+	}
+
+	return r0
+}
+
 // AccessControlPolicy provides a mock function with no fields
 func (_m *Store) AccessControlPolicy() store.AccessControlPolicyStore {
 	ret := _m.Called()

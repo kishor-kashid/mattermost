@@ -116,6 +116,7 @@ type SqlStoreStores struct {
 	aiSummary                  store.AISummaryStore
 	aiAnalytics                store.AIAnalyticsStore
 	aiPreferences              store.AIPreferencesStore
+	aiLinkSummary              store.AILinkSummaryStore
 }
 
 type SqlStore struct {
@@ -271,6 +272,7 @@ func New(settings model.SqlSettings, logger mlog.LoggerIFace, metrics einterface
 	store.stores.aiSummary = newSqlAISummaryStore(store)
 	store.stores.aiAnalytics = newSqlAIAnalyticsStore(store)
 	store.stores.aiPreferences = newSqlAIPreferencesStore(store)
+	store.stores.aiLinkSummary = newSqlAILinkSummaryStore(store)
 
 	store.stores.preference.(*SqlPreferenceStore).deleteUnusedFeatures()
 
@@ -1090,4 +1092,8 @@ func (ss *SqlStore) AIAnalytics() store.AIAnalyticsStore {
 
 func (ss *SqlStore) AIPreferences() store.AIPreferencesStore {
 	return ss.stores.aiPreferences
+}
+
+func (ss *SqlStore) AILinkSummary() store.AILinkSummaryStore {
+	return ss.stores.aiLinkSummary
 }

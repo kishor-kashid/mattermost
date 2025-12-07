@@ -9,6 +9,7 @@ import analytics from './analytics';
 import preferences from './preferences';
 import formatter from './formatter';
 import system from './system';
+import linkSummaries from './link_summaries';
 
 export default combineReducers({
     summaries,
@@ -17,5 +18,6 @@ export default combineReducers({
     preferences,
     formatter,
     system,
+    linkSummaries,
 });
 

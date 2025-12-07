@@ -238,7 +238,13 @@ const FormattingBar = (props: FormattingBarProps): JSX.Element => {
             {Array.isArray(additionalControls) && additionalControls.length > 0 && (
                 <>
                     {showSeparators && <Separator/>}
-                    {additionalControls}
+                    {React.Children.map(additionalControls, (child, idx) => {
+                        if (!React.isValidElement(child)) {
+                            return child;
+                        }
+                        const key = child.key ?? `additional-control-${idx}`;
+                        return React.cloneElement(child, {key});
+                    })}
                 </>
             )}
 

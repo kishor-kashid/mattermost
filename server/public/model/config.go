@@ -2793,15 +2793,16 @@ func (s *LibreTranslateProviderSettings) SetDefaults() {
 // }
 
 type AISettings struct {
-	Enable              *bool   `access:"integrations_ai,cloud_restrictable"`
-	OpenAIAPIKey        *string `access:"integrations_ai,cloud_restrictable"` // telemetry: none
-	OpenAIModel         *string `access:"integrations_ai,cloud_restrictable"`
-	MaxMessageLimit     *int    `access:"integrations_ai,cloud_restrictable"`
-	APIRateLimit        *int    `access:"integrations_ai,cloud_restrictable"`
-	EnableSummarization *bool   `access:"integrations_ai,cloud_restrictable"`
-	EnableAnalytics     *bool   `access:"integrations_ai,cloud_restrictable"`
-	EnableActionItems   *bool   `access:"integrations_ai,cloud_restrictable"`
-	EnableFormatting    *bool   `access:"integrations_ai,cloud_restrictable"`
+	Enable               *bool   `access:"integrations_ai,cloud_restrictable"`
+	OpenAIAPIKey         *string `access:"integrations_ai,cloud_restrictable"` // telemetry: none
+	OpenAIModel          *string `access:"integrations_ai,cloud_restrictable"`
+	MaxMessageLimit      *int    `access:"integrations_ai,cloud_restrictable"`
+	APIRateLimit         *int    `access:"integrations_ai,cloud_restrictable"`
+	EnableSummarization  *bool   `access:"integrations_ai,cloud_restrictable"`
+	EnableAnalytics      *bool   `access:"integrations_ai,cloud_restrictable"`
+	EnableActionItems    *bool   `access:"integrations_ai,cloud_restrictable"`
+	EnableFormatting     *bool   `access:"integrations_ai,cloud_restrictable"`
+	EnableLinkSummarizer *bool   `access:"integrations_ai,cloud_restrictable"`
 }
 
 func (s *AISettings) SetDefaults() {
@@ -2839,6 +2840,10 @@ func (s *AISettings) SetDefaults() {
 
 	if s.EnableFormatting == nil {
 		s.EnableFormatting = NewPointer(true)
+	}
+
+	if s.EnableLinkSummarizer == nil {
+		s.EnableLinkSummarizer = NewPointer(true)
 	}
 }
 

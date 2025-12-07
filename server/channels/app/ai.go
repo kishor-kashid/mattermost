@@ -48,7 +48,7 @@ func (a *App) InitializeAI() error {
 
 	// Store the AI service (note: this requires adding aiService field to App/Server struct)
 	// For now, we're setting up the pattern
-	a.Log().Info("AI services initialized successfully", 
+	a.Log().Info("AI services initialized successfully",
 		mlog.String("api_key", maskedKey),
 		mlog.String("model", a.GetAIModel()))
 
@@ -112,12 +112,12 @@ func (a *App) GetAIModel() string {
 func (a *App) IsAIFeatureEnabled(feature string) bool {
 	// Debug logging for AI feature check
 	aiEnabled := a.Config().AISettings.Enable != nil && *a.Config().AISettings.Enable
-	
+
 	a.Log().Debug("Checking AI feature status",
 		mlog.String("feature", feature),
 		mlog.Bool("ai_enabled", aiEnabled),
 		mlog.Bool("enable_ptr_nil", a.Config().AISettings.Enable == nil))
-	
+
 	if !aiEnabled {
 		a.Log().Debug("AI features are disabled globally",
 			mlog.String("feature_requested", feature))
@@ -137,15 +137,19 @@ func (a *App) IsAIFeatureEnabled(feature string) bool {
 		featureEnabled = a.Config().AISettings.EnableActionItems != nil && *a.Config().AISettings.EnableActionItems
 	case "formatting":
 		featureEnabled = a.Config().AISettings.EnableFormatting != nil && *a.Config().AISettings.EnableFormatting
+	case "link_summarization", "link_summarizer", "links":
+		featureEnabled = a.Config().AISettings.EnableLinkSummarizer != nil && *a.Config().AISettings.EnableLinkSummarizer
+	case "links_auto":
+		featureEnabled = a.Config().AISettings.EnableLinkSummarizer != nil && *a.Config().AISettings.EnableLinkSummarizer
 	default:
 		a.Log().Warn("Unknown AI feature requested", mlog.String("feature", feature))
 		return false
 	}
-	
+
 	a.Log().Debug("AI feature enabled check result",
 		mlog.String("feature", feature),
 		mlog.Bool("result", featureEnabled))
-	
+
 	return featureEnabled
 }
 
@@ -180,6 +184,10 @@ func (a *App) GetOrCreateAIPreferences(userId string) (*model.AIPreferences, err
 		EnableAnalytics:     true,
 		EnableActionItems:   true,
 		EnableFormatting:    true,
+		EnableLinkSummaries: true,
+		AutoSummarizeLinks:  true,
+		DefaultLinkExpanded: false,
+		LinkSummaryLength:   "standard",
 		DefaultModel:        a.GetAIModel(),
 		FormattingProfile:   "professional",
 	}
@@ -191,4 +199,3 @@ func (a *App) GetOrCreateAIPreferences(userId string) (*model.AIPreferences, err
 
 	return preferences, nil
 }
-

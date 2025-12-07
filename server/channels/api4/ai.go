@@ -20,6 +20,7 @@ func (api *API) InitAI() {
 	api.initSummarizerRoutes()
 	api.InitAIActionItemsRoutes()
 	api.initFormatterRoutes()
+	api.initLinkSummarizerRoutes()
 }
 
 // requireAIEnabled checks if AI features are enabled in the configuration

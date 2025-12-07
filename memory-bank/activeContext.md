@@ -1,70 +1,26 @@
 # Active Context
 
 ## Current Work Focus
-**PR #5 & PR #4 Complete - Ready for PR #6 (Channel Analytics Dashboard)**
+**PR #6 In Progress – Link & Article Summarizer**
 
-All critical bugs fixed! Action Items and Message Formatting Assistant are now fully functional and tested. Ready to begin PR #6 - Channel Analytics Dashboard.
+Link summarizer scaffolding is partially implemented (backend + frontend). Action Items and Message Formatting remain stable.
 
-### Session Summary (Dec 6, 2024)
-This session focused on debugging and fixing two major UI issues:
+### Latest Session (PR6)
+Built initial Link Summarizer stack and UI:
+1. **Data & Store**: Added `AILinkSummary` model, store interface, SQL store, migrations `000152_create_ai_link_summaries` and `000153_update_ai_preferences_link_settings`.
+2. **App & API**: Added link summarizer service, fetcher (timeout, size cap, concurrent fetch limiter, redirect cap), extractor, prompts, and endpoints:  
+   - POST `/api/v4/ai/links/summarize`  
+   - GET `/api/v4/ai/links/summary?url=`  
+   Health reports link feature; post hook triggers async summarize of first URL in posts.
+3. **Frontend Data**: Added link summary types, client methods, actions, reducer, selectors.
+4. **UI**: Link summary card + key points + styles; post body renders summaries for multiple links per message with refresh.
 
-1. **Action Items RHS Panel** - Was opening Search panel instead of Action Items dashboard
-2. **Message Formatting** - Button was submitting form and profiles weren't loading
+## Recent Changes (PR6 – Link Summarizer)
 
-Both issues are now resolved and features are working end-to-end.
-
-## Recent Changes (Dec 6, 2024 - Latest Session)
-
-### ✅ Action Items RHS Panel Fixed
-**Problem**: Clicking Action Items button opened the Search panel instead of Action Items dashboard.
-
-**Root Cause**: The `Search` component has its own Redux-connected `index.tsx` that determines `searchVisible`. When `rhsState === 'action-items'`:
-- `searchVisible` was calculated as `true` (because `'action-items'` is truthy and not in the exclusion list)
-- `Search` component rendered `SearchResults` instead of `children` (ActionItemsRHS)
-
-**Solution**: Added `RHSStates.ACTION_ITEMS` to the exclusion list in TWO places:
-1. `webapp/channels/src/components/search/index.tsx` (line 53-58)
-2. `webapp/channels/src/components/sidebar_right/index.ts` (line 47)
-
-```typescript
-// In search/index.tsx
-searchVisible: rhsState !== null && (![
-    RHSStates.PLUGIN,
-    RHSStates.CHANNEL_INFO,
-    RHSStates.CHANNEL_MEMBERS,
-    RHSStates.EDIT_HISTORY,
-    RHSStates.ACTION_ITEMS,  // Added
-].includes(rhsState)),
-```
-
-### ✅ Message Formatting Fixed
-**Problem 1**: Clicking the format button was sending the message.
-**Root Cause**: Button in form without `type="button"` defaults to `type="submit"`.
-**Solution**: Added `type='button'`, `e.preventDefault()`, and `e.stopPropagation()` to the formatting button.
-
-**Problem 2**: Formatting profiles never loaded (always showed "Loading formatting profiles...").
-**Root Cause**: Selector was looking at wrong Redux state path.
-**Solution**: Fixed `webapp/channels/src/selectors/ai_formatter.ts`:
-```typescript
-// Before (WRONG)
-const getAIState = (state: GlobalState) => state.entities.ai;
-
-// After (CORRECT)  
-const getAIState = (state: GlobalState) => state.ai;
-```
-
-### ✅ Debug Logging Removed
-Cleaned up all console.log, console.error, and console.warn statements from:
-- `components/ai/action_items/dashboard.tsx`
-- `components/ai/action_items/create_modal.tsx`
-- `components/ai/action_items/post_action_item_menu_item.tsx`
-- `components/ai/formatter/formatting_menu.tsx`
-- `actions/ai_action_items.ts`
-- `actions/ai_formatter.ts`
-- `reducers/ai/action_items.ts`
-- `selectors/ai_action_items.ts`
-- `client/ai.ts`
-- `server/channels/api4/ai_action_items.go`
+- Added link summary model/store, migrations, and API endpoints.
+- Added app service with OpenAI prompts, fetcher (timeout, size limit, redirect limit, concurrent fetch limiter), extractor, caching (7-day TTL), and post hook auto-detection of first URL.
+- Frontend: client methods, Redux actions/reducer/selectors, multi-link summary rendering, summary card UI with key points and refresh.
+- Frontend UX change: link summarization no longer auto-runs. Each link now shows a “Summarize link” button; summaries fetch on click, not on post render. Added inline error display + retry when backend fetch fails (e.g., target URL 403/404).
 
 ## Current Feature Status
 
@@ -72,16 +28,16 @@ Cleaned up all console.log, console.error, and console.warn statements from:
 |---------|--------|-------|
 | AI Message Summarization | ✅ Complete | Fully working |
 | Action Item Extractor | ✅ Complete | RHS panel fixed, dashboard working |
-| Message Formatting Assistant | ✅ Complete | Button fixed, profiles loading |
-| Channel Analytics Dashboard | ⏳ Next | PR #6 |
+| Message Formatting Assistant | ✅ Complete | Stable |
+| Link & Article Summarizer | 🚧 In progress | Backend/API/store/UI scaffolding done; prefs/actions/tests pending |
 
 ## Next Steps
-1. ✅ ~~Fix Action Items RHS panel showing Search instead of dashboard~~
-2. ✅ ~~Fix Message Formatting button submitting form~~
-3. ✅ ~~Fix Message Formatting profiles not loading~~
-4. ✅ ~~Clean up debug logging~~
-5. ⏳ **Begin PR #6: Channel Analytics Dashboard**
-6. ⏳ PR #7: Testing, Documentation & Polish
+1. Backend hardening: robots/redirect handling polish, rate limiting for external fetches, scheduled cleanup job for expired link summaries, stronger validation/permissions.
+2. Preferences: expose link prefs (auto summarize, default expanded, summary length) via API/UI.
+3. UI actions: manual “Summarize Link” action, copy/expand/collapse controls, better loading/error states.
+4. Multi-link polish and error handling.
+5. Tests: backend (service/API/store), frontend (actions/reducer/components), and E2E happy path.
+6. PR #7: Testing, Documentation & Polish after PR6 completes.
 
 ## Key Patterns Learned This Session
 
@@ -177,4 +133,6 @@ User clicks button
 - `webapp/channels/src/components/ai/formatter/formatting_menu.tsx` - Fixed button type
 - `webapp/channels/src/selectors/ai_formatter.ts` - Fixed state path
 - Multiple files - Removed debug logging
+- `webapp/channels/src/components/ai/link_summary/post_link_summary.tsx` - Switched to manual summarize trigger, added error display/retry, shallow-equal selector
+- `webapp/channels/src/components/advanced_text_editor/formatting_bar/formatting_bar.tsx` - Added stable keys for additional controls
 

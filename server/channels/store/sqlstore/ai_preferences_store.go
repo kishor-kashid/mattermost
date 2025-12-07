@@ -34,11 +34,15 @@ func (s *SqlAIPreferencesStore) Save(preferences *model.AIPreferences) (*model.A
 		Insert("AIPreferences").
 		Columns(
 			"Id", "UserId", "EnableSummarization", "EnableAnalytics", "EnableActionItems",
-			"EnableFormatting", "DefaultModel", "FormattingProfile", "CreateAt", "UpdateAt",
+			"EnableFormatting", "EnableLinkSummaries", "DefaultModel", "FormattingProfile",
+			"AutoSummarizeLinks", "DefaultLinkExpanded", "LinkSummaryLength",
+			"CreateAt", "UpdateAt",
 		).
 		Values(
 			preferences.Id, preferences.UserId, preferences.EnableSummarization, preferences.EnableAnalytics, preferences.EnableActionItems,
-			preferences.EnableFormatting, preferences.DefaultModel, preferences.FormattingProfile, preferences.CreateAt, preferences.UpdateAt,
+			preferences.EnableFormatting, preferences.EnableLinkSummaries, preferences.DefaultModel, preferences.FormattingProfile,
+			preferences.AutoSummarizeLinks, preferences.DefaultLinkExpanded, preferences.LinkSummaryLength,
+			preferences.CreateAt, preferences.UpdateAt,
 		)
 
 	if _, err := s.GetMaster().ExecBuilder(query); err != nil {
@@ -99,8 +103,12 @@ func (s *SqlAIPreferencesStore) Update(preferences *model.AIPreferences) (*model
 		Set("EnableAnalytics", preferences.EnableAnalytics).
 		Set("EnableActionItems", preferences.EnableActionItems).
 		Set("EnableFormatting", preferences.EnableFormatting).
+		Set("EnableLinkSummaries", preferences.EnableLinkSummaries).
 		Set("DefaultModel", preferences.DefaultModel).
 		Set("FormattingProfile", preferences.FormattingProfile).
+		Set("AutoSummarizeLinks", preferences.AutoSummarizeLinks).
+		Set("DefaultLinkExpanded", preferences.DefaultLinkExpanded).
+		Set("LinkSummaryLength", preferences.LinkSummaryLength).
 		Set("UpdateAt", preferences.UpdateAt).
 		Where(sq.Eq{"Id": preferences.Id})
 
@@ -174,4 +182,3 @@ func (s *SqlAIPreferencesStore) SetFormatterPreferences(userId string, defaultPr
 	_, err = s.Update(preferences)
 	return err
 }
-

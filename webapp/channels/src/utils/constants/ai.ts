@@ -65,6 +65,11 @@ export default keyMirror({
     AI_GET_FORMATTING_PROFILES_FAILURE: null,
     AI_CLEAR_FORMAT_PREVIEW: null,
 
+    // Link Summaries
+    AI_LINK_SUMMARY_REQUEST: null,
+    AI_LINK_SUMMARY_SUCCESS: null,
+    AI_LINK_SUMMARY_FAILURE: null,
+
     // Preferences
     AI_PREFERENCES_GET_REQUEST: null,
     AI_PREFERENCES_GET_SUCCESS: null,
@@ -72,6 +77,7 @@ export default keyMirror({
     AI_PREFERENCES_UPDATE_REQUEST: null,
     AI_PREFERENCES_UPDATE_SUCCESS: null,
     AI_PREFERENCES_UPDATE_FAILURE: null,
+    AI_PREFERENCES_LINK_UPDATE: null,
 });
 
 export const AIActionItemsTypes = keyMirror({

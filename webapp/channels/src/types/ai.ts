@@ -98,8 +98,12 @@ export interface AIPreferences {
     enable_analytics: boolean;
     enable_action_items: boolean;
     enable_formatting: boolean;
+    enable_link_summaries?: boolean;
     default_model: string;
     formatting_profile: string;
+    auto_summarize_links?: boolean;
+    default_link_expanded?: boolean;
+    link_summary_length?: 'short' | 'standard' | 'detailed';
     create_at: number;
     update_at: number;
 }
@@ -150,6 +154,23 @@ export interface AIConfig {
     enable_analytics: boolean;
     enable_action_items: boolean;
     enable_formatting: boolean;
+    enable_link_summarizer?: boolean;
     max_message_limit: number;
+}
+
+export interface AILinkSummary {
+    id?: string;
+    url?: string;
+    url_hash?: string;
+    title?: string;
+    description?: string;
+    summary: string;
+    key_points?: string[];
+    content_type?: string;
+    reading_time?: number;
+    domain?: string;
+    favicon_url?: string;
+    create_at?: number;
+    expires_at?: number;
 }
 

@@ -50,14 +50,14 @@ mattermost/
 
 ### Core Features (4 Total)
 1. **AI Message Summarization** - GPT-powered summaries of threads and channels (max 500 messages, configurable)
-2. **Channel Analytics Dashboard** - Visual insights into communication patterns and metrics
+2. **Link & Article Summarizer** - AI-generated summaries of shared URLs and articles
 3. **Action Item Extractor** - Auto-detect tasks and commitments, track with reminders
 4. **Message Formatting Assistant** - AI-powered grammar, tone, and structure improvements
 
 ### Technology Stack (Native Integration)
 - **Backend**: Go (Mattermost core: api4, app, store layers)
 - **Frontend**: React + TypeScript + Redux (Mattermost channels webapp)
-- **Database**: PostgreSQL (new AI tables: AIActionItems, AISummaries, AIAnalytics, AIPreferences)
+- **Database**: PostgreSQL (new AI tables: AIActionItems, AISummaries, AILinkSummaries, AIPreferences)
 - **AI/LLM**: OpenAI GPT-4 / GPT-3.5-turbo API
 - **Background Jobs**: Native Mattermost jobs framework
 - **Build**: Standard Mattermost build system (Make + Webpack)
@@ -73,13 +73,13 @@ mattermost/
 ### Timeline
 - **Total Duration**: 6-7 days
 - **Scope**: 87 tasks across 7 PRs
-- **Status**: PR #5 Complete - Moving to PR #6 (Channel Analytics Dashboard) - December 5, 2024
+- **Status**: PR #5 Complete - Moving to PR #6 (Link & Article Summarizer) - December 6, 2024
 - **Progress**: 5 of 7 PRs completed (~71% complete)
   - ✅ PR #1: Core Infrastructure
   - ✅ PR #2: API Foundation
   - ✅ PR #3: AI Message Summarization
   - ✅ PR #4: Action Item Extractor
   - ✅ PR #5: Message Formatting Assistant (Complete - all 13 tasks)
-  - ⏳ PR #6: Channel Analytics Dashboard
+  - ⏳ PR #6: Link & Article Summarizer
   - ⏳ PR #7: Testing, Documentation & Polish
 

@@ -168,7 +168,7 @@ make build-client        # Build webapp bundle only
     "MaxMessageLimit": 500,
     "APIRateLimit": 60,
     "EnableSummarization": true,
-    "EnableAnalytics": true,
+    "EnableLinkSummarizer": true,
     "EnableActionItems": true,
     "EnableFormatting": true
   }
@@ -195,12 +195,12 @@ type AISettings struct {
 **Database Tables:**
 - **AIActionItems**: Action items with assignees, deadlines, status
 - **AISummaries**: Cached summaries with expiration (24h TTL)
-- **AIAnalytics**: Daily aggregated channel metrics
+- **AILinkSummaries**: Cached URL/article summaries with 7-day TTL
 - **AIPreferences**: Per-user AI feature preferences (includes formatting preferences)
 
 **Retention Policies:**
 - Summaries: 24 hours (cache with ExpiresAt)
-- Analytics: 90 days rolling (cleanup job)
+- Link summaries: 7 days (cache with ExpiresAt)
 - Action Items: Until completed/dismissed (soft delete)
 - User Preferences: Indefinite
 

@@ -291,3 +291,15 @@ channels/db/migrations/postgres/000146_add_audience_and_resource_to_oauth.down.s
 channels/db/migrations/postgres/000146_add_audience_and_resource_to_oauth.up.sql
 channels/db/migrations/postgres/000147_create_autotranslation_tables.down.sql
 channels/db/migrations/postgres/000147_create_autotranslation_tables.up.sql
+channels/db/migrations/postgres/000148_create_ai_action_items.down.sql
+channels/db/migrations/postgres/000148_create_ai_action_items.up.sql
+channels/db/migrations/postgres/000149_create_ai_summaries.down.sql
+channels/db/migrations/postgres/000149_create_ai_summaries.up.sql
+channels/db/migrations/postgres/000150_create_ai_analytics.down.sql
+channels/db/migrations/postgres/000150_create_ai_analytics.up.sql
+channels/db/migrations/postgres/000151_create_ai_preferences.down.sql
+channels/db/migrations/postgres/000151_create_ai_preferences.up.sql
+channels/db/migrations/postgres/000152_create_ai_link_summaries.down.sql
+channels/db/migrations/postgres/000152_create_ai_link_summaries.up.sql
+channels/db/migrations/postgres/000153_update_ai_preferences_link_settings.down.sql
+channels/db/migrations/postgres/000153_update_ai_preferences_link_settings.up.sql

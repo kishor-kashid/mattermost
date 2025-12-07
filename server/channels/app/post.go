@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -34,6 +35,7 @@ const (
 )
 
 var atMentionPattern = regexp.MustCompile(`\B@`)
+var urlPattern = regexp.MustCompile(`https?://[^\s]+`)
 
 func (a *App) CreatePostAsUser(rctx request.CTX, post *model.Post, currentSessionId string, setOnline bool) (*model.Post, *model.AppError) {
 	// Check that channel has not been deleted
@@ -392,10 +394,10 @@ func (a *App) CreatePost(rctx request.CTX, post *model.Post, channel *model.Chan
 
 	// AI Action Item Detection - auto-detect commitments and tasks
 	actionItemsEnabled := a.IsAIFeatureEnabled("action_items")
-	rctx.Logger().Info("Checking AI action items feature", 
+	rctx.Logger().Info("Checking AI action items feature",
 		mlog.Bool("enabled", actionItemsEnabled),
 		mlog.String("post_id", rpost.Id))
-	
+
 	if actionItemsEnabled {
 		rctx.Logger().Info("Starting auto-detection goroutine", mlog.String("post_id", rpost.Id))
 		a.Srv().Go(func() {
@@ -406,6 +408,29 @@ func (a *App) CreatePost(rctx request.CTX, post *model.Post, channel *model.Chan
 				)
 			}
 		})
+	}
+
+	// Link summarization auto-detection
+	linkSummariesEnabled := a.IsAIFeatureEnabled("links_auto")
+	if linkSummariesEnabled {
+		msg := rpost.Message
+		link := detectFirstURL(msg)
+		if link != "" {
+			postID := rpost.Id
+			userID := rpost.UserId
+			a.Srv().Go(func() {
+				_, err := a.SummarizeLink(rctx, &LinkSummarizationRequest{
+					UserId:   userID,
+					URL:      link,
+					UseCache: true,
+				})
+				if err != nil {
+					rctx.Logger().Debug("Link summarization skipped/failed",
+						mlog.String("post_id", postID),
+						mlog.Err(err))
+				}
+			})
+		}
 	}
 
 	// Normally, we would let the API layer call PreparePostForClient, but we do it here since it also needs
@@ -2924,4 +2949,18 @@ func getRewritePromptForAction(action model.RewriteAction, message string, custo
 	}
 
 	return ""
+}
+
+// detectFirstURL returns the first http/https URL in the message.
+func detectFirstURL(message string) string {
+	matches := urlPattern.FindAllString(message, -1)
+	if len(matches) == 0 {
+		return ""
+	}
+
+	u, err := url.Parse(matches[0])
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return ""
+	}
+	return matches[0]
 }

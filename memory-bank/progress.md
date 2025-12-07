@@ -88,15 +88,15 @@
    - `/summarize` slash command
    - REST API: `/api/v4/ai/summarize`
 
-2. **Channel Analytics Dashboard** ⏳ NEXT
-   - Message volume charts (Recharts)
-   - Top contributors visualization
-   - Activity heatmaps
-   - Response time metrics
-   - CSV export capability
-   - Daily aggregation background job
-   - AIAnalytics table storage
-   - REST API: `/api/v4/ai/analytics/{channelId}`
+2. **Link & Article Summarizer** 🚧 IN PROGRESS
+   - URL detection in messages (post hook auto-detects first link)
+   - Content fetching/extraction (timeout, size cap, redirect + concurrency limits)
+   - AI-powered link summarization via OpenAI
+   - Rich preview cards in UI (multi-link support, refresh)
+   - Key points extraction
+   - 7-day caching with AILinkSummaries table (cleanup job pending)
+   - REST API: `/api/v4/ai/links/summarize`, `/api/v4/ai/links/summary`
+   - Missing: prefs UI/API wiring, manual summarize action, robots/rate-limit polish, scheduled cleanup, tests
 
 3. **Action Item Extractor** ✅ COMPLETE
    - AI-powered commitment detection
@@ -117,8 +117,8 @@
    - REST API: `/api/v4/ai/format`
 
 ## Current Development Phase
-**Phase**: PR #4 & PR #5 Complete - Ready for PR #6 (Channel Analytics Dashboard)  
-**State**: Three features complete and fully tested (Summarization, Action Items, Formatting), PR #6 next
+**Phase**: PR #6 In Progress (Link & Article Summarizer)  
+**State**: Summarization, Action Items, Formatting complete; Link Summarizer partially implemented (backend/store/API/UI scaffolding) with remaining polish and tests pending
 
 ### Development Progress
 - [x] **PR #1: Core Infrastructure** ✅ COMPLETE (Dec 4, 2024)
@@ -126,8 +126,13 @@
 - [x] **PR #3: AI Message Summarization** ✅ COMPLETE (Dec 5, 2024)
 - [x] **PR #4: Action Item Extractor** ✅ COMPLETE (Dec 5-6, 2024)
 - [x] **PR #5: Message Formatting Assistant** ✅ COMPLETE (Dec 5-6, 2024)
-- [ ] PR #6: Channel Analytics Dashboard
+- [ ] PR #6: Link & Article Summarizer (in progress)
 - [ ] PR #7: Testing, Documentation & Polish
+
+### Latest Updates (PR6)
+- Link summaries now require a user click (“Summarize link”) instead of auto-fetch on post render.
+- Inline error display + retry added when link fetch/summarize fails (e.g., target URL 403/404).
+- Formatting bar additional controls now use stable keys to silence React key warnings.
 
 ## Known Issues - All Resolved ✅
 
@@ -185,7 +190,7 @@ const getAIState = (state: GlobalState) => state.ai;
 **Milestone 3**: Summarization ✅ **ACHIEVED** (Dec 5, 2024)
 **Milestone 4**: Action Item Extractor ✅ **ACHIEVED** (Dec 5-6, 2024)
 **Milestone 5**: Message Formatting Assistant ✅ **ACHIEVED** (Dec 5-6, 2024)
-**Milestone 6**: Channel Analytics Dashboard ⏳ **NEXT**
+**Milestone 6**: Link & Article Summarizer 🚧 **IN PROGRESS**
 **Milestone 7**: Testing & Polish ⏳ **FINAL**
 
 ## Progress Summary
@@ -197,7 +202,7 @@ const getAIState = (state: GlobalState) => state.ai;
 | #3 | AI Message Summarization | ✅ Complete | Dec 5, 2024 |
 | #4 | Action Item Extractor | ✅ Complete | Dec 5-6, 2024 |
 | #5 | Message Formatting Assistant | ✅ Complete | Dec 5-6, 2024 |
-| #6 | Channel Analytics Dashboard | ⏳ Next | - |
+| #6 | Link & Article Summarizer | 🚧 In Progress | - |
 | #7 | Testing & Documentation | ⏳ Pending | - |
 
 **Overall Progress**: 5 of 7 PRs complete (~71%)

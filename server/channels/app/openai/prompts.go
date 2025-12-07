@@ -15,6 +15,7 @@ const (
 	PromptTypeSummarize        PromptType = "summarize"
 	PromptTypeActionItemExtract PromptType = "action_item_extract"
 	PromptTypeFormatMessage     PromptType = "format_message"
+	PromptTypeLinkSummary       PromptType = "link_summary"
 )
 
 // SummarizationLevel defines the detail level of summarization
@@ -34,6 +35,15 @@ const (
 	FormattingCasual       FormattingProfile = "casual"
 	FormattingTechnical    FormattingProfile = "technical"
 	FormattingConcise      FormattingProfile = "concise"
+)
+
+// LinkSummaryLength defines verbosity for link summaries.
+type LinkSummaryLength string
+
+const (
+	LinkSummaryShort    LinkSummaryLength = "short"
+	LinkSummaryStandard LinkSummaryLength = "standard"
+	LinkSummaryDetailed LinkSummaryLength = "detailed"
 )
 
 // PromptTemplate represents a prompt template with variable substitution
@@ -86,6 +96,18 @@ func GetMessageFormattingPrompt(profile FormattingProfile) *PromptTemplate {
 		return messageFormattingConcise
 	default:
 		return messageFormattingProfessional
+	}
+}
+
+// GetLinkSummaryPrompt returns the prompt template for link summarization.
+func GetLinkSummaryPrompt(length LinkSummaryLength) *PromptTemplate {
+	switch length {
+	case LinkSummaryShort:
+		return linkSummaryPromptShort
+	case LinkSummaryDetailed:
+		return linkSummaryPromptDetailed
+	default:
+		return linkSummaryPromptStandard
 	}
 }
 

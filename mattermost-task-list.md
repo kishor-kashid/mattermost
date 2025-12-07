@@ -17,13 +17,13 @@ mattermost/
 │   │   ├── api4/                # REST API layer
 │   │   │   └── ai_*.go          # NEW: AI API endpoints
 │   │   ├── app/                 # Business logic layer
-│   │   │   ├── ai_*.go          # NEW: AI services (summarizer, analytics, etc.)
+│   │   │   ├── ai_*.go          # NEW: AI services (summarizer, link_summarizer, etc.)
 │   │   │   └── openai/          # NEW: OpenAI client package
 │   │   ├── store/               # Data access layer
 │   │   │   └── sqlstore/        # SQL implementations
 │   │   │       └── ai_*.go      # NEW: AI data stores
 │   │   └── jobs/                # Background workers
-│   │       └── ai_*.go          # NEW: AI jobs (reminders, aggregation)
+│   │       └── ai_*.go          # NEW: AI jobs (reminders, cache cleanup)
 │   ├── enterprise/              # Enterprise-only logic
 │   ├── config/, data/, logs/    # Runtime config & local dev assets
 │   └── scripts/, tests/, public # Supporting assets and helpers
@@ -83,26 +83,26 @@ mattermost/
 - [ ] **1.3 Database Schema & Migrations**
   - [ ] Create AIActionItems table migration
   - [ ] Create AISummaries table migration
-  - [ ] Create AIAnalytics table migration
+  - [ ] Create AILinkSummaries table migration
   - [ ] Create AIPreferences table migration
   - [ ] Add indexes for query optimization
   - **Files Created:**
     - `server/channels/db/migrations/postgres/000XXX_create_ai_action_items.up.sql`
     - `server/channels/db/migrations/postgres/000XXX_create_ai_summaries.up.sql`
-    - `server/channels/db/migrations/postgres/000XXX_create_ai_analytics.up.sql`
+    - `server/channels/db/migrations/postgres/000XXX_create_ai_link_summaries.up.sql`
     - `server/channels/db/migrations/postgres/000XXX_create_ai_preferences.up.sql`
 
 - [ ] **1.4 Data Store Layer**
   - [ ] Create AI store interface definitions
   - [ ] Implement AIActionItemStore (SQL)
   - [ ] Implement AISummaryStore (SQL)
-  - [ ] Implement AIAnalyticsStore (SQL)
+  - [ ] Implement AILinkSummaryStore (SQL)
   - [ ] Implement AIPreferencesStore (SQL)
   - **Files Created:**
     - `server/channels/store/ai_store.go` (interfaces)
     - `server/channels/store/sqlstore/ai_action_item_store.go`
     - `server/channels/store/sqlstore/ai_summary_store.go`
-    - `server/channels/store/sqlstore/ai_analytics_store.go`
+    - `server/channels/store/sqlstore/ai_link_summary_store.go`
     - `server/channels/store/sqlstore/ai_preferences_store.go`
 
 - [ ] **1.5 OpenAI Client Package**
@@ -608,154 +608,157 @@ mattermost/
 
 ---
 
-## PR #6: Channel Analytics Dashboard Feature
+## PR #6: Link & Article Summarizer Feature
 
-**Branch:** `feature/ai-analytics`  
-**Description:** Implement channel analytics data collection, aggregation in database, background jobs for metrics calculation, API endpoints, and interactive dashboard UI with charts.
+**Branch:** `feature/ai-link-summarizer`  
+**Description:** Implement AI-powered link and article summarization including URL detection, content fetching, AI summarization, caching, and rich preview cards in the UI.
 
 ### Tasks
 
-- [ ] **6.1 Analytics Service (Backend)**
-  - [ ] Create analytics service in app layer
-  - [ ] Define metrics calculation methods
-  - [ ] Implement data aggregation logic
-  - [ ] Add time range query methods
+- [ ] **6.1 Link Summarizer Service (Backend)**
+  - [ ] Create link summarizer service in app layer
+  - [ ] Implement URL detection regex patterns
+  - [ ] Add content type detection (article, docs, GitHub, etc.)
+  - [ ] Define summary generation methods
   - **Files Created:**
-    - `server/channels/app/ai_analytics.go`
-    - `server/channels/app/ai_analytics_types.go`
+    - `server/channels/app/ai_link_summarizer.go`
+    - `server/channels/app/ai_link_summarizer_types.go`
 
-- [ ] **6.2 Data Collection Logic**
-  - [ ] Implement message counting per channel/day
-  - [ ] Track unique user participation
-  - [ ] Calculate hourly distribution
-  - [ ] Track thread creation and engagement
-  - [ ] Count reactions and file uploads
+- [ ] **6.2 Content Fetcher**
+  - [ ] Implement HTTP content fetcher with timeout
+  - [ ] Add User-Agent and request headers
+  - [ ] Implement robots.txt checking
+  - [ ] Add content size limits (5MB max)
+  - [ ] Handle redirects and error responses
   - **Files Created:**
-    - `server/channels/app/ai_analytics_collector.go`
+    - `server/channels/app/ai_content_fetcher.go`
 
-- [ ] **6.3 Metrics Aggregation Job**
-  - [ ] Create daily analytics aggregation job
-  - [ ] Calculate response time averages
-  - [ ] Calculate engagement rates
-  - [ ] Identify top contributors
-  - [ ] Store aggregated data to AIAnalytics table
+- [ ] **6.3 Content Extractor**
+  - [ ] Implement HTML parsing and main content extraction
+  - [ ] Add readability algorithm for article detection
+  - [ ] Extract title, description, and metadata
+  - [ ] Clean and normalize extracted text
+  - [ ] Implement special extractors for GitHub, StackOverflow
   - **Files Created:**
-    - `server/channels/jobs/ai_analytics_aggregator.go`
-    - `server/channels/jobs/ai_analytics_aggregator_scheduler.go`
-  - **Files Modified:**
-    - `server/channels/jobs/jobs.go`
+    - `server/channels/app/ai_content_extractor.go`
+    - `server/channels/app/ai_content_extractors/`
 
-- [ ] **6.4 Post Hook for Analytics**
-  - [ ] Hook into MessageHasBeenPosted
-  - [ ] Increment daily counters
-  - [ ] Track message metadata (reactions, threads, files)
-  - [ ] Update hourly distribution
+- [ ] **6.4 Link Summary Prompts**
+  - [ ] Create link summarization prompt templates
+  - [ ] Add key points extraction prompt
+  - [ ] Implement reading time estimation
+  - [ ] Add content type-specific prompts
   - **Files Modified:**
-    - `server/channels/app/post.go`
+    - `server/channels/app/openai/prompts.go`
+    - `server/channels/app/openai/prompt_templates.go`
 
-- [ ] **6.5 Analytics Store Methods**
-  - [ ] Implement SaveAnalytics, GetAnalytics methods
-  - [ ] Add GetAnalyticsByDateRange query
-  - [ ] Implement aggregation queries
-  - [ ] Add cleanup methods for old data (>90 days)
+- [ ] **6.5 Link Summary Store**
+  - [ ] Implement CreateLinkSummary method
+  - [ ] Implement GetLinkSummaryByUrl method (with URL hash)
+  - [ ] Add cache expiration logic (7-day TTL)
+  - [ ] Implement cleanup job for expired summaries
+  - **Files Created:**
+    - `server/channels/store/sqlstore/ai_link_summary_store.go`
   - **Files Modified:**
-    - `server/channels/store/sqlstore/ai_analytics_store.go`
+    - `server/channels/store/ai_store.go`
 
-- [ ] **6.6 Analytics API Endpoints**
-  - [ ] Create GET /api/v4/ai/analytics/{channelId}
-  - [ ] Accept start_date and end_date parameters
-  - [ ] Return formatted metrics and time series
-  - [ ] Create GET /api/v4/ai/analytics/{channelId}/export (CSV)
+- [ ] **6.6 Link Summarizer API Endpoints**
+  - [ ] Create POST /api/v4/ai/links/summarize
+  - [ ] Create GET /api/v4/ai/links/summary?url=
+  - [ ] Implement request validation
+  - [ ] Add rate limiting for external fetches
   - [ ] Add permission checking
   - **Files Created:**
-    - `server/channels/api4/ai_analytics.go`
+    - `server/channels/api4/ai_link_summarizer.go`
   - **Files Modified:**
     - `server/channels/api4/ai.go`
 
-- [ ] **6.7 Redux Actions & Reducers (Frontend)**
-  - [ ] Create analytics action creators
-  - [ ] Implement analytics reducer
-  - [ ] Add analytics selectors
-  - [ ] Handle data caching
-  - **Files Created:**
-    - `webapp/channels/src/actions/ai_analytics.ts`
-    - `webapp/channels/src/reducers/ai/analytics.ts`
-    - `webapp/channels/src/selectors/ai_analytics.ts`
+- [ ] **6.7 Post Hook for Auto-Detection**
+  - [ ] Hook into MessageHasBeenPosted
+  - [ ] Detect URLs in message content
+  - [ ] Trigger async link summarization
+  - [ ] Update post with summary attachment
+  - **Files Modified:**
+    - `server/channels/app/post.go`
 
-- [ ] **6.8 Analytics API Client (Frontend)**
-  - [ ] Add getChannelAnalytics method to Client4
-  - [ ] Add exportAnalytics method
-  - [ ] Support date range parameters
+- [ ] **6.8 Redux Actions & Reducers (Frontend)**
+  - [ ] Create link summarizer action creators
+  - [ ] Implement link summary reducer
+  - [ ] Add link summary selectors
+  - [ ] Handle loading and caching states
+  - **Files Created:**
+    - `webapp/channels/src/actions/ai_link_summarizer.ts`
+    - `webapp/channels/src/reducers/ai/link_summaries.ts`
+    - `webapp/channels/src/selectors/ai_link_summarizer.ts`
+
+- [ ] **6.9 Link Summary API Client (Frontend)**
+  - [ ] Add summarizeLink method to Client4
+  - [ ] Add getLinkSummary method
+  - [ ] Add TypeScript types for requests/responses
   - **Files Modified:**
     - `webapp/channels/src/client/ai.ts`
 
-- [ ] **6.9 Date Range Picker Component**
-  - [ ] Create date range selector
-  - [ ] Add preset options (7d, 30d, 90d, custom)
-  - [ ] Integrate with analytics actions
+- [ ] **6.10 Link Summary Card Component**
+  - [ ] Create rich preview card component
+  - [ ] Display title, domain, favicon
+  - [ ] Show AI-generated summary
+  - [ ] Display key points as bullet list
+  - [ ] Add reading time indicator
+  - [ ] Add expand/collapse functionality
   - **Files Created:**
-    - `webapp/channels/src/components/ai/analytics/date_range_picker.tsx`
+    - `webapp/channels/src/components/ai/link_summary/summary_card.tsx`
+    - `webapp/channels/src/components/ai/link_summary/key_points.tsx`
 
-- [ ] **6.10 Metrics Cards Component**
-  - [ ] Display summary metrics (total messages, users, etc.)
-  - [ ] Show response time and engagement metrics
-  - [ ] Add trend indicators (↑↓ from previous period)
-  - **Files Created:**
-    - `webapp/channels/src/components/ai/analytics/metrics_cards.tsx`
-
-- [ ] **6.11 Message Volume Chart**
-  - [ ] Integrate charting library (recharts)
-  - [ ] Create line chart for message volume over time
-  - [ ] Add interactive tooltips
-  - [ ] Support responsive sizing
-  - **Files Created:**
-    - `webapp/channels/src/components/ai/analytics/message_volume_chart.tsx`
-
-- [ ] **6.12 Contributors Chart**
-  - [ ] Create horizontal bar chart
-  - [ ] Display top contributors with message counts
-  - [ ] Add user profile links
-  - **Files Created:**
-    - `webapp/channels/src/components/ai/analytics/contributors_chart.tsx`
-
-- [ ] **6.13 Activity Heatmap**
-  - [ ] Create hourly activity heatmap component
-  - [ ] Show peak communication hours
-  - [ ] Color-code by activity intensity
-  - **Files Created:**
-    - `webapp/channels/src/components/ai/analytics/activity_heatmap.tsx`
-
-- [ ] **6.14 Analytics Dashboard**
-  - [ ] Create main analytics dashboard component
-  - [ ] Integrate all charts and metrics
-  - [ ] Add date range picker
-  - [ ] Add export button
-  - [ ] Make responsive for various screen sizes
-  - **Files Created:**
-    - `webapp/channels/src/components/ai/analytics/dashboard.tsx`
-    - `webapp/channels/src/components/ai/analytics/analytics.scss`
-
-- [ ] **6.15 Channel Menu Integration**
-  - [ ] Add "View Analytics" to channel header menu
-  - [ ] Open analytics dashboard in modal or RHS
+- [ ] **6.11 Link Summary Actions**
+  - [ ] Add "Read Full Article" button (opens new tab)
+  - [ ] Add "Copy Summary" button
+  - [ ] Add "Refresh Summary" button
+  - [ ] Add collapse/expand toggle
   - **Files Modified:**
-    - `webapp/channels/src/components/channel_header/channel_header.tsx`
+    - `webapp/channels/src/components/ai/link_summary/summary_card.tsx`
 
-- [ ] **6.16 Slash Command (Optional)**
-  - [ ] Register `/analytics` command
-  - [ ] Open analytics dashboard for current channel
+- [ ] **6.12 Post Integration**
+  - [ ] Detect links in rendered posts
+  - [ ] Show summary card below post with link
+  - [ ] Handle multiple links in single post
+  - [ ] Add loading state while fetching summary
   - **Files Created:**
-    - `server/channels/app/slashcommands/command_ai_analytics.go`
+    - `webapp/channels/src/components/ai/link_summary/post_link_summary.tsx`
   - **Files Modified:**
-    - `server/channels/app/slashcommands/slashcommands.go`
+    - `webapp/channels/src/components/post_view/post_body/post_body.tsx`
 
-- [ ] **6.17 Verification**
-  - [ ] Test data collection over multiple days
-  - [ ] Verify aggregation job runs correctly
-  - [ ] Test all charts render with real data
-  - [ ] Test date range filtering
-  - [ ] Test CSV export
-  - [ ] Verify permissions for private channels
+- [ ] **6.13 Manual Summarize Action**
+  - [ ] Add "Summarize Link" to link hover menu
+  - [ ] Trigger summarization for unsummarized links
+  - [ ] Show summary in modal or inline
+  - **Files Created:**
+    - `webapp/channels/src/components/ai/link_summary/summarize_link_button.tsx`
+
+- [ ] **6.14 User Preferences**
+  - [ ] Add auto-summarize toggle
+  - [ ] Add default expanded/collapsed preference
+  - [ ] Add summary length preference
+  - [ ] Save preferences to AIPreferences table
+  - **Files Modified:**
+    - `webapp/channels/src/components/user_settings/advanced/`
+    - `server/channels/store/sqlstore/ai_preferences_store.go`
+
+- [ ] **6.15 Styling**
+  - [ ] Create link summary card styles
+  - [ ] Add loading skeleton animation
+  - [ ] Ensure responsive design
+  - [ ] Match Mattermost design system
+  - **Files Created:**
+    - `webapp/channels/src/components/ai/link_summary/link_summary.scss`
+
+- [ ] **6.16 Verification**
+  - [ ] Test URL detection in various message formats
+  - [ ] Test content fetching for different site types
+  - [ ] Verify caching works correctly (7-day TTL)
+  - [ ] Test with various content types (articles, docs, GitHub)
+  - [ ] Test error handling for unreachable URLs
+  - [ ] Test UI summarize button functionality
+  - [ ] Verify rate limiting prevents abuse
 
 ---
 
@@ -770,14 +773,14 @@ mattermost/
   - [ ] Write tests for AI summarizer service
   - [ ] Write tests for action item service and detector
   - [ ] Write tests for formatter service
-  - [ ] Write tests for analytics aggregator
+  - [ ] Write tests for link summarizer service
   - [ ] Write tests for OpenAI client (mocked)
   - [ ] Write tests for store methods
   - **Files Created:**
     - `server/channels/app/ai_summarizer_test.go`
     - `server/channels/app/ai_action_items_test.go`
     - `server/channels/app/ai_formatter_test.go`
-    - `server/channels/app/ai_analytics_test.go`
+    - `server/channels/app/ai_link_summarizer_test.go`
     - `server/channels/app/openai/client_test.go`
     - `server/channels/store/sqlstore/ai_*_store_test.go`
 
@@ -791,7 +794,7 @@ mattermost/
     - `server/channels/api4/ai_summarizer_test.go`
     - `server/channels/api4/ai_action_items_test.go`
     - `server/channels/api4/ai_formatter_test.go`
-    - `server/channels/api4/ai_analytics_test.go`
+    - `server/channels/api4/ai_link_summarizer_test.go`
 
 - [ ] **7.3 Frontend Component Tests**
   - [ ] Write tests for AI components (Jest + React Testing Library)
@@ -808,6 +811,7 @@ mattermost/
   - [ ] Test summarization end-to-end
   - [ ] Test action item creation and completion
   - [ ] Test formatting workflow
+  - [ ] Test link summarization workflow
   - **Files Created:**
     - `e2e-tests/cypress/integration/ai/*.spec.js`
 
@@ -912,7 +916,7 @@ mattermost/
 | #3 | AI Message Summarization Feature | ⬜ Not Started | 0/12 |
 | #4 | Action Item Extractor Feature | ⬜ Not Started | 0/14 |
 | #5 | Message Formatting Assistant Feature | ⬜ Not Started | 0/13 |
-| #6 | Channel Analytics Dashboard Feature | ⬜ Not Started | 0/17 |
+| #6 | Link & Article Summarizer Feature | ⬜ Not Started | 0/16 |
 | #7 | Testing, Documentation & Polish | ⬜ Not Started | 0/14 |
 
 **Total Tasks:** 87  

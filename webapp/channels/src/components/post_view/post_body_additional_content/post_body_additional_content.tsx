@@ -16,6 +16,7 @@ import PostAttachmentOpenGraph from 'components/post_view/post_attachment_opengr
 import PostImage from 'components/post_view/post_image';
 import PostMessagePreview from 'components/post_view/post_message_preview';
 import YoutubeVideo from 'components/youtube_video';
+import {PostLinkSummary} from 'components/ai/link_summary/post_link_summary';
 
 import webSocketClient from 'client/web_websocket_client';
 import type {TextFormattingOptions} from 'utils/text_formatting';
@@ -151,6 +152,7 @@ export default class PostBodyAdditionalContent extends React.PureComponent<Props
 
     render() {
         const embed = this.getEmbed();
+        const links = extractLinks(this.props.post.message);
 
         if (this.props.appsEnabled) {
             const appEmbeds = isArrayOf<AppBinding>(this.props.post.props?.app_bindings, isAppBinding) ? validateBindings(this.props.post.props?.app_bindings) : [];
@@ -176,12 +178,41 @@ export default class PostBodyAdditionalContent extends React.PureComponent<Props
                 <div>
                     {(toggleable && prependToggle) && this.renderToggle(true)}
                     {this.props.children}
+                    {links.length > 0 && <PostLinkSummary urls={links}/>}
                     {(toggleable && !prependToggle) && this.renderToggle(false)}
                     {this.renderEmbed(embed)}
                 </div>
             );
         }
 
-        return this.props.children;
+        return (
+            <>
+                {this.props.children}
+                {links.length > 0 && <PostLinkSummary urls={links}/>}
+            </>
+        );
     }
+}
+
+const urlRegex = /(https?:\/\/[^\s]+)/ig;
+
+function extractLinks(message: string): string[] {
+    if (!message) {
+        return [];
+    }
+
+    const matches = message.match(urlRegex);
+    if (!matches) {
+        return [];
+    }
+
+    const seen = new Set<string>();
+    return matches.filter((m) => {
+        const norm = m.trim().toLowerCase();
+        if (!norm || seen.has(norm)) {
+            return false;
+        }
+        seen.add(norm);
+        return true;
+    });
 }

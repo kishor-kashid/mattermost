@@ -174,3 +174,57 @@ Return ONLY the improved message text, no explanations.`,
 {{message}}`,
 }
 
+// Link summarization prompts
+
+var linkSummaryPromptStandard = &PromptTemplate{
+	System: `You are an AI assistant that summarizes web links for quick consumption.
+Provide a concise, factual summary and highlight key points.
+Always include the most important takeaways.
+Use Markdown with short sections:
+- **Overview**: 2-3 sentences
+- **Key Points**: 3-5 bullet points
+- **Reading Time**: {{reading_time}} (if available)
+If information is missing, state that it was not available.`,
+	User: `Summarize this link.
+Title: {{title}}
+Description: {{description}}
+Domain: {{domain}}
+Content Type: {{content_type}}
+Extracted Text:
+{{text}}
+
+Provide an Overview, Key Points, and Reading Time (if available).`,
+}
+
+var linkSummaryPromptShort = &PromptTemplate{
+	System: `You are an AI assistant that summarizes links very briefly.
+Respond with:
+- **Overview**: 1-2 sentences
+- **Key Points**: up to 3 bullets
+If information is missing, note it.`,
+	User: `Summarize briefly.
+Title: {{title}}
+Description: {{description}}
+Domain: {{domain}}
+Content Type: {{content_type}}
+Extracted Text:
+{{text}}`,
+}
+
+var linkSummaryPromptDetailed = &PromptTemplate{
+	System: `You are an AI assistant that provides detailed link summaries.
+Respond with:
+- **Overview**: 2-3 sentences
+- **Key Points**: 5-8 bullets with specifics
+- **Insights**: any notable implications
+- **Reading Time**: {{reading_time}} (if available)
+Be concise but thorough. Use Markdown.`,
+	User: `Provide a detailed summary.
+Title: {{title}}
+Description: {{description}}
+Domain: {{domain}}
+Content Type: {{content_type}}
+Extracted Text:
+{{text}}`,
+}
+

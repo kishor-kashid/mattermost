@@ -14,6 +14,7 @@ const initialState: AISystemState = {
         analytics: false,
         actionItems: false,
         formatting: false,
+        linkSummarization: false,
     },
     health: {
         available: false,
@@ -34,6 +35,7 @@ export default function systemReducer(state = initialState, action: AnyAction): 
                 analytics: features?.analytics || false,
                 actionItems: features?.action_items || false,
                 formatting: features?.formatting || false,
+                linkSummarization: features?.link_summarization || false,
             },
             health: {
                 available: service_available || false,

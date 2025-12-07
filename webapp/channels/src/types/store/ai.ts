@@ -10,6 +10,7 @@ export type AIState = {
     preferences: AIPreferencesState;
     formatter: AIFormatterState;
     system: AISystemState;
+    linkSummaries: AILinkSummariesState;
 };
 
 export type AISummariesState = {
@@ -53,11 +54,21 @@ export type AISystemState = {
         analytics: boolean;
         actionItems: boolean;
         formatting: boolean;
+        linkSummarization?: boolean;
     };
     health: {
         available: boolean;
         openaiConfigured: boolean;
         lastCheck: number | null;
     };
+};
+
+export type AILinkSummariesState = {
+    byUrl: Record<string, {
+        summary: import('types/ai').AILinkSummary;
+        fromCache?: boolean;
+    }>;
+    loading: Record<string, boolean>;
+    error: Record<string, string | null>;
 };
 

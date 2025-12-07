@@ -16,6 +16,13 @@ const (
 
 	AISummaryTypeThread  = "thread"
 	AISummaryTypeChannel = "channel"
+
+	// Link summary related constants
+	AILinkContentTypeArticle       = "article"
+	AILinkContentTypeDoc           = "doc"
+	AILinkContentTypeGitHub        = "github"
+	AILinkContentTypeStackOverflow = "stackoverflow"
+	AILinkContentTypeUnknown       = "unknown"
 )
 
 // AIActionItem represents an AI-detected action item from a message
@@ -59,7 +66,7 @@ func (a *AIActionItem) IsValid() *AppError {
 	if a.Status != "open" && a.Status != "in_progress" && a.Status != "completed" && a.Status != "dismissed" {
 		return NewAppError("AIActionItem.IsValid", "model.ai_action_item.is_valid.status.app_error", nil, "", http.StatusBadRequest)
 	}
-	
+
 	if a.Priority != "" && a.Priority != "low" && a.Priority != "medium" && a.Priority != "high" && a.Priority != "urgent" {
 		return NewAppError("AIActionItem.IsValid", "model.ai_action_item.is_valid.priority.app_error", nil, "", http.StatusBadRequest)
 	}
@@ -160,18 +167,68 @@ func (s *AISummary) PreSave() {
 	}
 }
 
+// AILinkSummary represents an AI-generated summary of a URL or article
+type AILinkSummary struct {
+	Id          string   `json:"id" db:"id"`
+	Url         string   `json:"url" db:"url"`
+	UrlHash     string   `json:"url_hash" db:"urlhash"`
+	Title       string   `json:"title,omitempty" db:"title"`
+	Description string   `json:"description,omitempty" db:"description"`
+	Summary     string   `json:"summary" db:"summary"`
+	KeyPoints   []string `json:"key_points,omitempty" db:"keypoints"`
+	ContentType string   `json:"content_type,omitempty" db:"contenttype"`
+	ReadingTime int      `json:"reading_time,omitempty" db:"readingtime"` // minutes
+	Domain      string   `json:"domain,omitempty" db:"domain"`
+	FaviconURL  string   `json:"favicon_url,omitempty" db:"faviconurl"`
+	CreateAt    int64    `json:"create_at" db:"createdat"`
+	ExpiresAt   int64    `json:"expires_at" db:"expiresat"`
+}
+
+func (l *AILinkSummary) IsValid() *AppError {
+	if !IsValidId(l.Id) {
+		return NewAppError("AILinkSummary.IsValid", "model.ai_link_summary.is_valid.id.app_error", nil, "", http.StatusBadRequest)
+	}
+
+	if l.Url == "" || l.UrlHash == "" {
+		return NewAppError("AILinkSummary.IsValid", "model.ai_link_summary.is_valid.url.app_error", nil, "", http.StatusBadRequest)
+	}
+
+	if l.Summary == "" {
+		return NewAppError("AILinkSummary.IsValid", "model.ai_link_summary.is_valid.summary.app_error", nil, "", http.StatusBadRequest)
+	}
+
+	if l.CreateAt == 0 || l.ExpiresAt == 0 {
+		return NewAppError("AILinkSummary.IsValid", "model.ai_link_summary.is_valid.timestamps.app_error", nil, "", http.StatusBadRequest)
+	}
+
+	return nil
+}
+
+func (l *AILinkSummary) PreSave() {
+	if l.Id == "" {
+		l.Id = NewId()
+	}
+
+	l.CreateAt = GetMillis()
+
+	if l.ExpiresAt == 0 {
+		// 7-day TTL for link summaries
+		l.ExpiresAt = l.CreateAt + (7 * 24 * 60 * 60 * 1000)
+	}
+}
+
 // AIAnalytics represents aggregated analytics data for a channel
 type AIAnalytics struct {
-	Id                  string                 `json:"id"`
-	ChannelId           string                 `json:"channel_id"`
-	Date                string                 `json:"date"` // Format: YYYY-MM-DD
-	MessageCount        int                    `json:"message_count"`
-	UserCount           int                    `json:"user_count"`
-	AvgResponseTime     int64                  `json:"avg_response_time"`
-	TopContributors     map[string]interface{} `json:"top_contributors"`
-	HourlyDistribution  map[string]interface{} `json:"hourly_distribution"`
-	CreateAt            int64                  `json:"create_at"`
-	UpdateAt            int64                  `json:"update_at"`
+	Id                 string                 `json:"id"`
+	ChannelId          string                 `json:"channel_id"`
+	Date               string                 `json:"date"` // Format: YYYY-MM-DD
+	MessageCount       int                    `json:"message_count"`
+	UserCount          int                    `json:"user_count"`
+	AvgResponseTime    int64                  `json:"avg_response_time"`
+	TopContributors    map[string]interface{} `json:"top_contributors"`
+	HourlyDistribution map[string]interface{} `json:"hourly_distribution"`
+	CreateAt           int64                  `json:"create_at"`
+	UpdateAt           int64                  `json:"update_at"`
 }
 
 func (a *AIAnalytics) IsValid() *AppError {
@@ -233,8 +290,12 @@ type AIPreferences struct {
 	EnableAnalytics     bool   `json:"enable_analytics"`
 	EnableActionItems   bool   `json:"enable_action_items"`
 	EnableFormatting    bool   `json:"enable_formatting"`
+	EnableLinkSummaries bool   `json:"enable_link_summaries"`
 	DefaultModel        string `json:"default_model"`
 	FormattingProfile   string `json:"formatting_profile"`
+	AutoSummarizeLinks  bool   `json:"auto_summarize_links"`
+	DefaultLinkExpanded bool   `json:"default_link_expanded"`
+	LinkSummaryLength   string `json:"link_summary_length"` // short | standard | detailed
 	CreateAt            int64  `json:"create_at"`
 	UpdateAt            int64  `json:"update_at"`
 }
@@ -256,6 +317,13 @@ func (p *AIPreferences) IsValid() *AppError {
 		return NewAppError("AIPreferences.IsValid", "model.ai_preferences.is_valid.update_at.app_error", nil, "", http.StatusBadRequest)
 	}
 
+	if p.LinkSummaryLength != "" &&
+		p.LinkSummaryLength != "short" &&
+		p.LinkSummaryLength != "standard" &&
+		p.LinkSummaryLength != "detailed" {
+		return NewAppError("AIPreferences.IsValid", "model.ai_preferences.is_valid.link_summary_length.app_error", nil, "", http.StatusBadRequest)
+	}
+
 	return nil
 }
 
@@ -275,9 +343,12 @@ func (p *AIPreferences) PreSave() {
 	if p.FormattingProfile == "" {
 		p.FormattingProfile = "professional"
 	}
+
+	if p.LinkSummaryLength == "" {
+		p.LinkSummaryLength = "standard"
+	}
 }
 
 func (p *AIPreferences) PreUpdate() {
 	p.UpdateAt = GetMillis()
 }
-

@@ -102,6 +102,7 @@ type Store interface {
 	AISummary() AISummaryStore
 	AIAnalytics() AIAnalyticsStore
 	AIPreferences() AIPreferencesStore
+	AILinkSummary() AILinkSummaryStore
 }
 
 type RetentionPolicyStore interface {

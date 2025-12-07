@@ -182,7 +182,7 @@ mattermost/
 - **Channel Header**: Extended with AI menu items
 - **Message Composer**: AI formatting integration
 - **Redux Store**: AI reducers integrated into root reducer
-- **Database**: 4 new tables with proper migrations
+- **Database**: 4 new tables with proper migrations (AIActionItems, AISummaries, AILinkSummaries, AIPreferences)
 
 ### Data Flow Patterns
 
@@ -216,14 +216,14 @@ mattermost/
 9. User clicks "Apply" → Formatted text replaces message in composer
 10. Redux state updated → Preview cleared
 
-**Analytics Collection Flow:**
-1. Message posted → `app.MessageHasBeenPosted()` extended
-2. Extract metrics (non-blocking)
-3. Update AIAnalytics table (upsert for current day)
-4. Background job aggregates hourly
-5. Frontend queries `/api/v4/ai/analytics/{channelId}`
-6. Redux actions update analytics state
-7. Charts re-render with new data
+**Link Summarization Flow:**
+1. User posts message with URL → URL detected via regex
+2. System fetches URL content asynchronously
+3. Content extracted and cleaned (readability algorithm)
+4. Sent to OpenAI for summary generation
+5. Summary cached in AILinkSummaries table (7-day TTL)
+6. Frontend displays rich preview card below message
+7. Subsequent requests served from cache
 
 **Action Items Creation Flow (with Global Modal):**
 1. User clicks "Create Action Item" from post menu

@@ -1,7 +1,7 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import type {AIActionItem, AIAnalytics, AIPreferences, AISummary, FormatMessageRequest, FormatMessageResponse, FormattingProfileInfo, SummarizeRequest} from 'types/ai';
+import type {AIActionItem, AIAnalytics, AILinkSummary, AIPreferences, AISummary, FormatMessageRequest, FormatMessageResponse, FormattingProfileInfo, SummarizeRequest} from 'types/ai';
 
 import {Client4} from 'mattermost-redux/client';
 
@@ -88,6 +88,25 @@ export class AIClient {
     async getSummariesByChannel(channelId: string, page = 0, perPage = 60): Promise<AISummary[]> {
         return Client4.doFetch(
             `${this.baseRoute}/summaries/channel/${channelId}?page=${page}&per_page=${perPage}`,
+            {method: 'get'},
+        );
+    }
+
+    // Link Summaries
+
+    async summarizeLink(url: string, forceRefresh = false, useCache = true): Promise<{summary: AILinkSummary; from_cache?: boolean; processing_ms?: number}> {
+        return Client4.doFetch(
+            `${this.baseRoute}/links/summarize`,
+            {
+                method: 'post',
+                body: JSON.stringify({url, force_refresh: forceRefresh, use_cache: useCache}),
+            },
+        );
+    }
+
+    async getLinkSummary(url: string, useCache = true): Promise<{summary: AILinkSummary; from_cache?: boolean; processing_ms?: number}> {
+        return Client4.doFetch(
+            `${this.baseRoute}/links/summary?url=${encodeURIComponent(url)}&use_cache=${useCache}`,
             {method: 'get'},
         );
     }

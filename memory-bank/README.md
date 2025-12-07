@@ -11,7 +11,7 @@ This directory contains comprehensive documentation about the Mattermost codebas
 
 ### AI Features
 1. **AI Message Summarization** - GPT-powered summaries (max 500 messages)
-2. **Channel Analytics Dashboard** - Visual communication insights
+2. **Link & Article Summarizer** - AI summaries of shared URLs and articles
 3. **Action Item Extractor** - Auto-detect and track commitments
 4. **Message Formatting Assistant** - AI grammar and tone improvements
 
@@ -21,7 +21,7 @@ This directory contains comprehensive documentation about the Mattermost codebas
 - [x] **PR #3**: AI Message Summarization ✅ Dec 5
 - [x] **PR #4**: Action Item Extractor ✅ Dec 5
 - [x] **PR #5**: Message Formatting Assistant ✅ Dec 5 (Complete - all 13 tasks)
-- [ ] PR #6: Channel Analytics Dashboard
+- [ ] PR #6: Link & Article Summarizer
 - [ ] PR #7: Testing, Documentation & Polish
 
 📄 **Full Details**: See `mattermost-prd.md` and `mattermost-task-list.md` in project root

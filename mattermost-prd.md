@@ -17,7 +17,7 @@
 4. [Target Users](#4-target-users)
 5. [Feature Specifications](#5-feature-specifications)
    - 5.1 [AI Message Summarization](#51-ai-message-summarization)
-   - 5.2 [Channel Analytics Dashboard](#52-channel-analytics-dashboard)
+   - 5.2 [Link & Article Summarizer](#52-link--article-summarizer)
    - 5.3 [Action Item Extractor](#53-action-item-extractor)
    - 5.4 [Message Formatting Assistant](#54-message-formatting-assistant)
 6. [Technical Architecture](#6-technical-architecture)
@@ -46,7 +46,7 @@ This document outlines the product requirements for the **Mattermost AI Producti
 Modern teams using Mattermost face several challenges:
 
 - **Information Overload:** High-volume channels make it difficult to catch up on missed conversations
-- **Lack of Insights:** Teams have no visibility into communication patterns and channel health
+- **Link Fatigue:** Team members share articles, docs, and links that take time to read; many go unread
 - **Lost Action Items:** Tasks and commitments mentioned in conversations get forgotten
 - **Communication Quality:** Messages lack proper formatting and clarity
 
@@ -55,7 +55,7 @@ Modern teams using Mattermost face several challenges:
 The Mattermost AI Productivity Suite addresses these challenges through four integrated **native features** added directly to the Mattermost core:
 
 1. **AI Message Summarization** - Intelligent summaries of threads and channels
-2. **Channel Analytics Dashboard** - Visual insights into communication patterns
+2. **Link & Article Summarizer** - AI-generated summaries of shared URLs and articles
 3. **Action Item Extractor** - Automatic detection and tracking of tasks and commitments
 4. **Message Formatting Assistant** - AI-powered message improvement and formatting
 
@@ -64,7 +64,7 @@ The Mattermost AI Productivity Suite addresses these challenges through four int
 | Benefit | Impact |
 |---------|--------|
 | Reduced time catching up on channels | 60% faster information absorption |
-| Data-driven team insights | Improved communication health visibility |
+| Shared links become actionable | 80% faster knowledge extraction from articles |
 | Never miss action items | 100% task capture from conversations |
 | Professional communication | Improved message clarity and formatting |
 
@@ -137,7 +137,7 @@ This is the upstream Mattermost monorepo; our AI Productivity Suite features wil
 | Goal | Description | Success Criteria |
 |------|-------------|------------------|
 | G1 | Reduce information overload | Users can summarize 50+ messages in <5 seconds |
-| G2 | Provide communication insights | Dashboard loads in <2 seconds with 30-day data |
+| G2 | Make shared links actionable | Link summaries generated in <5 seconds with key insights |
 | G3 | Capture all action items | Extract 95%+ of commitments from conversations |
 | G4 | Improve message quality | 80% of formatted messages rated as clearer |
 
@@ -204,15 +204,15 @@ This is the upstream Mattermost monorepo; our AI Productivity Suite features wil
 | US-1.3 | As a user, I want to receive a daily digest of important channel activity so that I stay informed | P1 |
 | US-1.4 | As a user, I want to customize the summary length and format so that it fits my preferences | P2 |
 
-#### Channel Analytics Dashboard
+#### Link & Article Summarizer
 
 | ID | User Story | Priority |
 |----|------------|----------|
-| US-2.1 | As a user, I want to see message volume over time so that I understand channel activity patterns | P0 |
-| US-2.2 | As a user, I want to see who the most active participants are so that I identify key contributors | P0 |
-| US-2.3 | As a user, I want to see peak activity hours so that I know when to post for maximum visibility | P1 |
-| US-2.4 | As a manager, I want to see response time metrics so that I can assess team responsiveness | P1 |
-| US-2.5 | As a user, I want to export analytics data so that I can create custom reports | P2 |
+| US-2.1 | As a user, I want to see AI summaries of shared links so that I can quickly understand article content | P0 |
+| US-2.2 | As a user, I want automatic link detection and summarization so that summaries appear without manual action | P0 |
+| US-2.3 | As a user, I want to see key points extracted from articles so that I can decide whether to read the full content | P1 |
+| US-2.4 | As a user, I want to manually trigger link summarization so that I can get summaries for older shared links | P1 |
+| US-2.5 | As a user, I want link summaries to be cached so that repeated access is instant | P2 |
 
 #### Action Item Extractor
 
@@ -373,104 +373,150 @@ Messages:
 
 ---
 
-### 5.2 Channel Analytics Dashboard
+### 5.2 Link & Article Summarizer
 
 #### 5.2.1 Overview
 
-The Channel Analytics Dashboard provides visual insights into communication patterns, helping users and managers understand channel activity, engagement, and team collaboration health.
+The Link & Article Summarizer uses AI to generate concise summaries of URLs shared in Mattermost. When team members share articles, documentation, blog posts, or other web content, the system automatically extracts key information, enabling users to quickly understand the content without leaving the chat.
 
 #### 5.2.2 Functional Requirements
 
-#### 5.3.1 Overview
-
-The Channel Analytics Dashboard provides visual insights into communication patterns, helping users and managers understand channel activity, engagement, and team collaboration health.
-
-#### 5.3.2 Functional Requirements
-
 | ID | Requirement | Priority |
 |----|-------------|----------|
-| FR-3.1 | System shall display message volume over time (line chart) | P0 |
-| FR-3.2 | System shall display top contributors by message count (bar chart) | P0 |
-| FR-3.3 | System shall display activity by hour of day (heatmap) | P0 |
-| FR-3.4 | System shall display activity by day of week (bar chart) | P0 |
-| FR-3.5 | System shall calculate and display average response time | P1 |
-| FR-3.6 | System shall display thread engagement rate (% of messages that get replies) | P1 |
-| FR-3.7 | System shall display emoji reaction breakdown (pie chart) | P2 |
-| FR-3.8 | System shall support date range filtering (7d, 30d, 90d, custom) | P0 |
-| FR-3.9 | System shall support channel comparison (up to 3 channels) | P2 |
-| FR-3.10 | System shall export data as CSV | P1 |
-| FR-3.11 | System shall display file sharing statistics | P2 |
-| FR-3.12 | System shall calculate channel health score | P2 |
+| FR-2.1 | System shall detect URLs in posted messages automatically | P0 |
+| FR-2.2 | System shall fetch and parse web page content from detected URLs | P0 |
+| FR-2.3 | System shall generate AI summaries of fetched content | P0 |
+| FR-2.4 | System shall display summaries as rich preview cards below messages | P0 |
+| FR-2.5 | System shall extract and display key points from articles | P1 |
+| FR-2.6 | System shall estimate reading time for original content | P1 |
+| FR-2.7 | System shall cache link summaries for 7 days | P1 |
+| FR-2.8 | System shall support manual "Summarize Link" action for any URL | P1 |
+| FR-2.9 | System shall handle various content types (articles, docs, GitHub READMEs) | P1 |
+| FR-2.10 | System shall respect robots.txt and rate limit external fetches | P0 |
+| FR-2.11 | System shall allow users to expand/collapse link summaries | P2 |
 
-#### 5.3.3 Metrics Definitions
+#### 5.2.3 Supported Content Types
 
-| Metric | Definition | Calculation |
-|--------|------------|-------------|
-| Message Volume | Total messages in time period | COUNT(messages) |
-| Active Users | Users who posted at least once | COUNT(DISTINCT user_id) |
-| Avg Messages/Day | Average daily message count | SUM(messages) / days |
-| Response Time | Avg time between message and first reply | AVG(first_reply_time - message_time) |
-| Thread Rate | Percentage of messages that start threads | threads / total_messages * 100 |
-| Engagement Rate | Percentage of messages with reactions or replies | engaged_messages / total_messages * 100 |
-| Peak Hour | Hour with most messages | MODE(hour_of_day) |
-| Top Contributor | User with most messages | MAX(user_message_count) |
+| Content Type | Examples | Extraction Method |
+|--------------|----------|-------------------|
+| Web Articles | News sites, blogs, Medium | HTML parsing, main content extraction |
+| Documentation | Confluence, Notion, GitBook | HTML parsing, structured content |
+| GitHub READMEs | Repository README.md files | Markdown parsing via GitHub API |
+| PDF Documents | Linked PDF files | PDF text extraction (first 10 pages) |
+| Stack Overflow | Q&A threads | Question + accepted answer extraction |
 
-#### 5.3.4 Dashboard Layout
+#### 5.2.4 Link Summary Card Layout
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Channel Analytics: #engineering          [7d ▼] [Export CSV]   │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌─────────┐│
-│  │   Messages   │ │ Active Users │ │ Avg Response │ │ Threads ││
-│  │     847      │ │      23      │ │    12 min    │ │   34%   ││
-│  │   ↑ 12%      │ │    ↓ 3%     │ │    ↓ 8%     │ │  ↑ 5%   ││
-│  └──────────────┘ └──────────────┘ └──────────────┘ └─────────┘│
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────────┐│
-│  │                  Message Volume Over Time                    ││
-│  │  ▲                                                          ││
-│  │  │    ╭─╮                        ╭───╮                      ││
-│  │  │   ╭╯ ╰╮    ╭──╮             ╭╯   ╰╮                     ││
-│  │  │  ╭╯   ╰────╯  ╰─╮  ╭───╮  ╭╯     ╰───╮                 ││
-│  │  │──╯              ╰──╯   ╰──╯          ╰────              ││
-│  │  └──────────────────────────────────────────────────▶       ││
-│  │    Mon   Tue   Wed   Thu   Fri   Sat   Sun                  ││
-│  └─────────────────────────────────────────────────────────────┘│
-│                                                                  │
-│  ┌────────────────────────┐  ┌─────────────────────────────────┐│
-│  │   Top Contributors     │  │      Activity by Hour           ││
-│  │                        │  │                                  ││
-│  │  @sarah    ████████ 89 │  │  ░░▓▓████████████▓▓░░░░░░░░░░  ││
-│  │  @john     ██████   67 │  │  12am    6am    12pm   6pm 12am ││
-│  │  @mike     █████    52 │  │                                  ││
-│  │  @lisa     ████     41 │  │  Peak: 2pm-4pm (34% of traffic) ││
-│  │  @alex     ███      28 │  │                                  ││
-│  └────────────────────────┘  └─────────────────────────────────┘│
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│  @bob shared a link:                                           │
+│  ─────────────────────────────────────────────────────────────  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ 📄 "Microservices vs Monoliths in 2024"                  │  │
+│  │    martinfowler.com · ⏱️ 12 min read                      │  │
+│  │ ───────────────────────────────────────────────────────  │  │
+│  │ 🤖 AI Summary:                                           │  │
+│  │                                                          │  │
+│  │ This article compares microservices and monolithic       │  │
+│  │ architectures for modern applications. Key insights:     │  │
+│  │                                                          │  │
+│  │ • Microservices suit large teams with clear domain       │  │
+│  │   boundaries and high deployment frequency               │  │
+│  │ • Monoliths are better for startups and small teams      │  │
+│  │   (<10 developers) due to lower operational overhead     │  │
+│  │ • The key decision factor is deployment frequency and    │  │
+│  │   team autonomy requirements                             │  │
+│  │                                                          │  │
+│  │ [Read Full Article ↗] [Copy Summary] [▼ Collapse]        │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-#### 5.3.5 User Interface
+#### 5.2.5 User Interface
 
-**Access Points:**
-- Channel header menu → "View Analytics"
-- Slash command: `/analytics [channel-name]`
-- Main menu → "Channel Analytics"
+**Automatic Summarization:**
+- Links detected in messages trigger automatic summarization
+- Summary card appears below the message (expandable/collapsible)
+- Loading state shown while fetching and summarizing
 
-**Dashboard Features:**
-- Responsive layout (desktop and tablet)
-- Interactive charts (hover for details)
-- Date range selector
-- Channel selector dropdown
-- Export button (CSV format)
-- Refresh button
+**Manual Summarization:**
+- Click "Summarize" on any link preview
+- Right-click link → "Summarize with AI"
+- Hover over link → Click summarize icon
 
-**Permissions:**
-- All users can view analytics for public channels they belong to
-- Private channel analytics visible only to members
-- System admins can view all channel analytics
+**Summary Card Features:**
+- Site favicon and domain name
+- Article title
+- Estimated reading time
+- AI-generated summary (3-5 key points)
+- "Read Full Article" button (opens in new tab)
+- Copy summary option
+- Expand/collapse toggle
+
+**User Preferences:**
+- Enable/disable auto-summarization
+- Default expanded/collapsed state
+- Summary length preference (brief/standard)
+
+#### 5.2.6 AI Prompt Engineering
+
+**System Prompt:**
+```
+You are a professional content summarizer. Your task is to create concise, 
+accurate summaries of web articles and documents shared in workplace chat.
+
+Guidelines:
+- Extract the main thesis or purpose of the content
+- Identify 3-5 key points or takeaways
+- Use bullet points for clarity
+- Maintain factual accuracy - do not add information not in the source
+- Keep summaries professional and neutral in tone
+- If the content is technical, preserve important technical details
+- If the content is unclear or too short, say so
+- Do not include personal opinions or editorializing
+```
+
+**User Prompt Template:**
+```
+Summarize the following article/document.
+
+Title: {title}
+Source: {domain}
+Content length: {word_count} words
+
+Provide:
+1. A brief overview (1-2 sentences)
+2. 3-5 key points as bullet points
+3. Any important conclusions or recommendations
+
+Content:
+{extracted_content}
+```
+
+#### 5.2.7 Content Extraction
+
+**Extraction Pipeline:**
+1. **URL Detection**: Regex pattern matching in message content
+2. **Fetch**: HTTP GET with appropriate User-Agent, timeout, and size limits
+3. **Parse**: HTML parsing to extract main content (removing ads, navigation, etc.)
+4. **Clean**: Remove HTML tags, normalize whitespace, limit to 10,000 characters
+5. **Summarize**: Send to OpenAI for AI summary generation
+6. **Cache**: Store summary in AILinkSummaries table with 7-day TTL
+
+**Extraction Libraries:**
+- `golang.org/x/net/html` for HTML parsing
+- `github.com/PuerkitoBio/goquery` for content extraction
+- Readability algorithm for main content detection
+
+#### 5.2.8 Error Handling
+
+| Error | User Message | Action |
+|-------|--------------|--------|
+| URL unreachable | "Unable to fetch this link" | Show basic link preview only |
+| Content too short | "Not enough content to summarize" | Show link title only |
+| Paywall detected | "This content is behind a paywall" | Show link preview only |
+| Rate limited | "Summarization temporarily unavailable" | Queue for later |
+| Unsupported format | "This content type is not supported" | Show link preview only |
 
 ---
 
@@ -844,8 +890,8 @@ information and meaning. Remove unnecessary words and redundancy.
 │  │  ┌────────────────────────────┴──────────────────────────────┐ │ │
 │  │  │                 app/ (Business Logic Layer)                │ │ │
 │  │  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌──────┐│ │ │
-│  │  │  │ Summarizer  │ │  Analytics  │ │ Action Item │ │Format││ │ │
-│  │  │  │   Service   │ │  Collector  │ │  Extractor  │ │ Svc  ││ │ │
+│  │  │  │ Summarizer  │ │    Link     │ │ Action Item │ │Format││ │ │
+│  │  │  │   Service   │ │ Summarizer  │ │  Extractor  │ │ Svc  ││ │ │
 │  │  │  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘ └───┬──┘│ │ │
 │  │  │         │               │               │             │    │ │ │
 │  │  │  ┌──────┴───────────────┴───────────────┴─────────────┴──┐│ │ │
@@ -860,7 +906,7 @@ information and meaning. Remove unnecessary words and redundancy.
 │  │  ┌────────────────────────────┴──────────────────────────────┐ │ │
 │  │  │               store/ (Data Access Layer)                   │ │ │
 │  │  │  ┌───────────────┐  ┌──────────────┐  ┌────────────────┐ │ │ │
-│  │  │  │  AI Summaries │  │ Action Items │  │  AI Analytics  │ │ │ │
+│  │  │  │  AI Summaries │  │ Action Items │  │ Link Summaries │ │ │ │
 │  │  │  │  Store        │  │  Store       │  │  Store         │ │ │ │
 │  │  │  └───────────────┘  └──────────────┘  └────────────────┘ │ │ │
 │  │  └───────────────────────────────────────────────────────────┘ │ │
@@ -870,7 +916,7 @@ information and meaning. Remove unnecessary words and redundancy.
 │                         PostgreSQL Database                          │
 │  ┌────────────┐ ┌────────────┐ ┌───────────────┐ ┌───────────────┐ │
 │  │   Posts    │ │  Channels  │ │ AISummaries   │ │ AIActionItems ││
-│  │   Users    │ │ Reactions  │ │ AIAnalytics   │ │ AIPreferences ││
+│  │   Users    │ │ Reactions  │ │AILinkSummaries│ │ AIPreferences ││
 │  └────────────┘ └────────────┘ └───────────────┘ └───────────────┘ │
 └──────────────────────────────────────────────────────────────────────┘
                                     │
@@ -892,15 +938,15 @@ information and meaning. Remove unnecessary words and redundancy.
 │  └────────────────────────────────────────────────────────────────┘ │
 │  ┌────────────────────────────────────────────────────────────────┐ │
 │  │              src/actions/ (Redux Action Creators)               │ │
-│  │  summarizeThread() | getAnalytics() | createActionItem()       │ │
+│  │  summarizeThread() | summarizeLink() | createActionItem()       │ │
 │  └────────────────────────────────────────────────────────────────┘ │
 │  ┌────────────────────────────────────────────────────────────────┐ │
 │  │            src/reducers/ (Redux State Management)               │ │
-│  │  aiSummaries | aiAnalytics | aiActionItems | aiFormatter       │ │
+│  │  aiSummaries | aiLinkSummaries | aiActionItems | aiFormatter   │ │
 │  └────────────────────────────────────────────────────────────────┘ │
 │  ┌────────────────────────────────────────────────────────────────┐ │
 │  │               src/selectors/ (Data Selectors)                   │ │
-│  │  getAISummary() | getActionItems() | getChannelAnalytics()     │ │
+│  │  getAISummary() | getLinkSummary() | getActionItems()          │ │
 │  └────────────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────────┘
 ```
@@ -913,17 +959,17 @@ information and meaning. Remove unnecessary words and redundancy.
 |-----------|-------|----------------|
 | API Handlers (`api4/ai_*.go`) | REST API | HTTP request handling, validation, permissions, response formatting |
 | Summarizer Service (`app/ai_summarizer.go`) | Business Logic | Message retrieval, formatting, OpenAI calls, summary generation |
-| Analytics Collector (`app/ai_analytics.go`) | Business Logic | Aggregates message data, calculates metrics, prepares visualization data |
+| Link Summarizer (`app/ai_link_summarizer.go`) | Business Logic | URL detection, content fetching, article summarization |
 | Action Item Extractor (`app/ai_action_items.go`) | Business Logic | Detects commitments and tasks, manages action item lifecycle |
 | Formatter Service (`app/ai_formatter.go`) | Business Logic | AI-powered formatting and grammar checking |
 | OpenAI Client (`app/openai_client.go`) | Shared Service | Wrapper for OpenAI API with rate limiting, retries, error handling |
-| AI Stores (`store/sqlstore/ai_*.go`) | Data Layer | Database operations for summaries, action items, analytics, preferences |
+| AI Stores (`store/sqlstore/ai_*.go`) | Data Layer | Database operations for summaries, link summaries, action items, preferences |
 
 **Frontend (webapp/channels/src/)**
 
 | Component | Layer | Responsibility |
 |-----------|-------|----------------|
-| AI Components (`components/ai/`) | UI | React components for summaries, analytics, action items, formatting |
+| AI Components (`components/ai/`) | UI | React components for summaries, link summaries, action items, formatting |
 | AI Actions (`actions/ai_*.ts`) | Redux Actions | Action creators for API calls and state updates |
 | AI Reducers (`reducers/ai_*.ts`) | Redux State | State management for AI features |
 | AI Selectors (`selectors/ai_*.ts`) | Redux Selectors | Memoized data selectors and computed state |
@@ -946,10 +992,10 @@ User Request → Validate Permissions → Fetch Messages → Format for LLM
      → Call OpenAI API → Parse Response → Cache Result → Return to User
 ```
 
-**Analytics Flow:**
+**Link Summarization Flow:**
 ```
-Message Posted → Extract Metrics → Update Aggregates → Store in KV
-     → User Requests Dashboard → Query Aggregates → Generate Charts → Render
+User Posts Link → Detect URL → Fetch Content → Extract Main Content
+     → Send to OpenAI → Generate Summary → Cache in DB → Display Card
 ```
 
 **Action Item Extraction Flow:**
@@ -1022,7 +1068,7 @@ Used for: Action Item creation/editing, Formatting preview/confirm, Date Range P
 
 Dropdown menu with plugin actions:
 - Summarize Channel
-- View Analytics
+- Summarize Link
 - Manage Action Items
 
 #### 7.2.4 Main Menu Items
@@ -1030,7 +1076,7 @@ Dropdown menu with plugin actions:
 Under plugin section:
 - Action Items Dashboard
 - Formatting Preferences
-- Channel Analytics
+- Link Summary Settings
 
 ### 7.3 Interaction Patterns
 
@@ -1039,7 +1085,7 @@ Under plugin section:
 | Summarize Thread | Right-click → Summarize | RHS opens with loading → Summary |
 | Manage Action Items | Channel menu → Action Items / `/actionitems` | RHS dashboard or modal opens |
 | Apply Formatting | Composer toolbar → AI Format | Preview modal opens with before/after |
-| View Analytics | Channel menu → Analytics | New tab/modal with dashboard |
+| Summarize Link | Click on link → Summarize | Summary card appears below message |
 
 ---
 
@@ -1097,25 +1143,25 @@ CREATE TABLE AISummaries (
 );
 ```
 
-**AIAnalytics Table:**
+**AILinkSummaries Table:**
 ```sql
-CREATE TABLE AIAnalytics (
+CREATE TABLE AILinkSummaries (
   Id VARCHAR(26) PRIMARY KEY,
-  ChannelId VARCHAR(26) NOT NULL,
-  Date VARCHAR(10) NOT NULL,  -- YYYY-MM-DD
-  MessageCount INT DEFAULT 0,
-  UniqueUsers INT DEFAULT 0,
-  ThreadCount INT DEFAULT 0,
-  ReactionCount INT DEFAULT 0,
-  FileCount INT DEFAULT 0,
-  HourlyDistribution TEXT,  -- JSON array of 24 integers
-  TopContributors TEXT,  -- JSON array of {userId, count}
-  AvgResponseTimeMs BIGINT,
+  Url TEXT NOT NULL,
+  UrlHash VARCHAR(64) NOT NULL,  -- SHA-256 hash for indexing
+  Title TEXT,
+  Domain VARCHAR(255),
+  Summary TEXT NOT NULL,
+  KeyPoints TEXT,  -- JSON array of key points
+  ReadingTimeMinutes INT,
+  ContentLength INT,
+  FetchedAt BIGINT NOT NULL,
   CreatedAt BIGINT NOT NULL,
-  UpdatedAt BIGINT NOT NULL,
+  ExpiresAt BIGINT NOT NULL,  -- 7-day TTL
   
-  UNIQUE INDEX idx_channel_date (ChannelId, Date),
-  INDEX idx_date (Date)
+  UNIQUE INDEX idx_url_hash (UrlHash),
+  INDEX idx_domain (Domain),
+  INDEX idx_expires (ExpiresAt)
 );
 ```
 
@@ -1146,7 +1192,7 @@ CREATE TABLE AIPreferences (
     "MaxMessageLimit": 500,
     "APIRateLimit": 60,
     "EnableSummarization": true,
-    "EnableAnalytics": true,
+    "EnableLinkSummarizer": true,
     "EnableActionItems": true,
     "EnableFormatting": true,
     "ActionItemDetectionChannels": [],
@@ -1161,7 +1207,7 @@ CREATE TABLE AIPreferences (
 |-------|----------------------|
 | Get user's action items | `SELECT * FROM AIActionItems WHERE AssigneeId = ? AND Status = ? AND DeleteAt = 0 ORDER BY Deadline` |
 | Get channel action items | `SELECT * FROM AIActionItems WHERE ChannelId = ? AND Status = ? AND DeleteAt = 0` |
-| Get channel analytics for date range | `SELECT * FROM AIAnalytics WHERE ChannelId = ? AND Date >= ? AND Date <= ?` |
+| Get link summary by URL | `SELECT * FROM AILinkSummaries WHERE UrlHash = ? AND ExpiresAt > ?` |
 | Check summary cache | `SELECT * FROM AISummaries WHERE ChannelId = ? AND StartTime = ? AND EndTime = ? AND ExpiresAt > ?` |
 | Get user preferences | `SELECT * FROM AIPreferences WHERE UserId = ?` |
 | Get overdue action items | `SELECT * FROM AIActionItems WHERE Deadline < ? AND Status = 'active' AND DeleteAt = 0` |
@@ -1204,39 +1250,49 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 }
 ```
 
-#### GET /api/v4/ai/analytics/{channel_id}
+#### POST /api/v4/ai/links/summarize
 
-**Query Parameters:**
-- `start_date`: ISO8601 date
-- `end_date`: ISO8601 date
+**Request:**
+```json
+{
+  "url": "string",
+  "force_refresh": "boolean (optional, default: false)"
+}
+```
 
 **Response:**
 ```json
 {
-  "channel_id": "string",
-  "period": {
-    "start": "ISO8601",
-    "end": "ISO8601"
-  },
-  "metrics": {
-    "total_messages": "number",
-    "active_users": "number",
-    "avg_messages_per_day": "number",
-    "avg_response_time_seconds": "number",
-    "thread_percentage": "number",
-    "engagement_rate": "number"
-  },
-  "time_series": [{
-    "date": "ISO8601 date",
-    "messages": "number",
-    "users": "number"
-  }],
-  "hourly_distribution": "number[24]",
-  "top_contributors": [{
-    "user_id": "string",
-    "username": "string",
-    "message_count": "number"
-  }]
+  "id": "string",
+  "url": "string",
+  "title": "string",
+  "domain": "string",
+  "summary": "string",
+  "key_points": ["string"],
+  "reading_time_minutes": "number",
+  "content_length": "number",
+  "fetched_at": "ISO8601 timestamp",
+  "cached": "boolean"
+}
+```
+
+#### GET /api/v4/ai/links/summary
+
+**Query Parameters:**
+- `url`: The URL to get summary for (required)
+
+**Response:**
+```json
+{
+  "id": "string",
+  "url": "string",
+  "title": "string",
+  "domain": "string",
+  "summary": "string",
+  "key_points": ["string"],
+  "reading_time_minutes": "number",
+  "cached": "boolean",
+  "expires_at": "ISO8601 timestamp"
 }
 ```
 
@@ -1325,7 +1381,6 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 | `/actionitems list` | List all active action items |
 | `/actionitems create` | Manually create an action item |
 | `/actionitems complete [id]` | Mark action item as complete |
-| `/analytics` | Open analytics dashboard for current channel |
 | `/format [action]` | Apply formatting to current message |
 
 ---
@@ -1357,7 +1412,7 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 | Data Type | Retention Period |
 |-----------|------------------|
 | Summary cache | 24 hours |
-| Analytics aggregates | 90 days |
+| Link summaries cache | 7 days |
 | Action items (active) | Until completed or dismissed |
 | Notification history | 7 days |
 | User preferences | Until user deletes account |
@@ -1383,7 +1438,8 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 |-----------|--------|---------|
 | Thread summarization (< 50 messages) | 3 seconds | 10 seconds |
 | Channel summarization (< 500 messages) | 5 seconds | 15 seconds |
-| Analytics dashboard load | 1 second | 3 seconds |
+| Link summarization (new URL) | 5 seconds | 15 seconds |
+| Link summarization (cached) | 100 ms | 500 ms |
 | Create/complete action item | 200 ms | 1 second |
 | Notification classification | 50 ms | 200 ms |
 
@@ -1394,7 +1450,7 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 | Concurrent summarization requests | 10 per server |
 | Messages processed for notifications | 1000/second |
 | Active action items per user | 200 max |
-| Analytics data points | 90 days of daily aggregates |
+| Link summary cache entries | 10,000 max |
 
 ### 11.3 Resource Limits
 
@@ -1405,6 +1461,8 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 | Summary cache size | 1000 entries |
 | Notification queue per user | 500 items |
 | Maximum message length for summarization | 100,000 characters total |
+| Maximum fetched page size | 5 MB |
+| Maximum content for link summarization | 10,000 characters |
 
 ---
 
@@ -1462,7 +1520,8 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 |--------|------------------------------|
 | Plugin installations | 100+ |
 | Daily active users | 50+ |
-| Summaries generated | 500+ |
+| Message summaries generated | 500+ |
+| Link summaries generated | 300+ |
 | Action items tracked | 1000+ |
 | Messages formatted | 300+ |
 
@@ -1470,8 +1529,8 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 
 | Metric | Target |
 |--------|--------|
-| Summaries per user per week | 5+ |
-| Analytics dashboard views per week | 3+ |
+| Message summaries per user per week | 5+ |
+| Link summaries per user per week | 10+ |
 | Action items completed per user per week | 8+ |
 | Messages formatted per user per week | 3+ |
 
@@ -1496,7 +1555,7 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 | 3 | Core Infrastructure | OpenAI integration, plugin settings, basic API structure |
 | 4 | Feature: Summarization | Slash command, thread/channel summarization, RHS display |
 | 5 | Feature: Action Item Extractor | Auto-detection, dashboard, reminders |
-| 6 | Feature: Analytics + Message Formatter | Analytics dashboard, formatting UI and AI integration |
+| 6 | Feature: Link Summarizer + Formatter | Link summarization, formatting UI and AI integration |
 | 7 | Polish & Documentation | Bug fixes, testing, README, demo video |
 
 ### 15.2 Milestones
@@ -1515,7 +1574,7 @@ All AI endpoints are part of the native Mattermost API v4 under the `/api/v4/ai/
 ### 16.1 Version 1.1 (Potential)
 
 - **Smart Notifications** - AI-powered notification prioritization and filtering
-- Action Item Extractor
+- **Channel Analytics Dashboard** - Visual insights into communication patterns
 - Semantic Search with vector embeddings
 - Recurring reminder rules for action items
 - Multi-LLM support (Anthropic, local Ollama)

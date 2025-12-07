@@ -25,14 +25,15 @@ func aiHealthCheck(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	// Build health check response
 	health := map[string]interface{}{
-		"enabled":            true,
-		"service_available":  aiService != nil,
-		"openai_configured":  c.App.Config().AISettings.OpenAIAPIKey != nil && *c.App.Config().AISettings.OpenAIAPIKey != "",
+		"enabled":           true,
+		"service_available": aiService != nil,
+		"openai_configured": c.App.Config().AISettings.OpenAIAPIKey != nil && *c.App.Config().AISettings.OpenAIAPIKey != "",
 		"features": map[string]bool{
-			"summarization": c.App.Config().AISettings.EnableSummarization != nil && *c.App.Config().AISettings.EnableSummarization,
-			"analytics":     c.App.Config().AISettings.EnableAnalytics != nil && *c.App.Config().AISettings.EnableAnalytics,
-			"action_items":  c.App.Config().AISettings.EnableActionItems != nil && *c.App.Config().AISettings.EnableActionItems,
-			"formatting":    c.App.Config().AISettings.EnableFormatting != nil && *c.App.Config().AISettings.EnableFormatting,
+			"summarization":      c.App.Config().AISettings.EnableSummarization != nil && *c.App.Config().AISettings.EnableSummarization,
+			"analytics":          c.App.Config().AISettings.EnableAnalytics != nil && *c.App.Config().AISettings.EnableAnalytics,
+			"action_items":       c.App.Config().AISettings.EnableActionItems != nil && *c.App.Config().AISettings.EnableActionItems,
+			"formatting":         c.App.Config().AISettings.EnableFormatting != nil && *c.App.Config().AISettings.EnableFormatting,
+			"link_summarization": c.App.Config().AISettings.EnableLinkSummarizer != nil && *c.App.Config().AISettings.EnableLinkSummarizer,
 		},
 	}
 
@@ -157,4 +158,3 @@ func aiTestConnection(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
